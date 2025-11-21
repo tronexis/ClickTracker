@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click Interaction Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Click Interaction Tracker</h1>
+            <p>Track and compare interaction sequences.</p>
+        </header>
+
+        <main>
+            <div class="controls">
+                <div class="session-controls">
+                    <button id="btn-start-a" class="btn primary">
+                        <span class="btn-icon">▶</span>
+                        <span>Start Session A</span>
+                    </button>
+                    <button id="btn-start-b" class="btn primary">
+                        <span class="btn-icon">▶</span>
+                        <span>Start Session B</span>
+                    </button>
+                    <button id="btn-stop" class="btn warning" style="display: none;">
+                        <span class="btn-icon">⏹</span>
+                        <span>Stop Recording</span>
+                    </button>
+                    <button id="btn-reset" class="btn secondary">
+                        <span class="btn-icon">↻</span>
+                        <span>Reset All</span>
+                    </button>
+                </div>
+                <div class="status-display">
+                    <span id="status-badge" class="status-badge">Ready</span>
+                    <span id="timer">0.00s</span>
+                </div>
+            </div>
+
+            <div class="workspace">
+                <div class="interaction-zone">
+                    <div class="grid-container">
+                        <button class="grid-btn" data-id="1">1</button>
+                        <button class="grid-btn" data-id="2">2</button>
+                        <button class="grid-btn" data-id="3">3</button>
+                        <button class="grid-btn" data-id="4">4</button>
+                        <button class="grid-btn" data-id="5">5</button>
+                        <button class="grid-btn" data-id="6">6</button>
+                        <button class="grid-btn" data-id="7">7</button>
+                        <button class="grid-btn" data-id="8">8</button>
+                        <button class="grid-btn" data-id="9">9</button>
+                    </div>
+                </div>
+
+                <div class="data-panel">
+                    <div class="session-col" id="col-a">
+                        <div class="session-header">
+                            <h3>Session A</h3>
+                            <span class="session-count" id="count-a">0 clicks</span>
+                        </div>
+                        <ul class="log-list" id="log-a"></ul>
+                        <div class="empty-state" id="empty-a">
+                            <span class="empty-icon">📋</span>
+                            <p>No data recorded yet</p>
+                        </div>
+                    </div>
+                    <div class="session-col" id="col-b">
+                        <div class="session-header">
+                            <h3>Session B</h3>
+                            <span class="session-count" id="count-b">0 clicks</span>
+                        </div>
+                        <ul class="log-list" id="log-b"></ul>
+                        <div class="empty-state" id="empty-b">
+                            <span class="empty-icon">📋</span>
+                            <p>No data recorded yet</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="comparison-section">
+                <button id="btn-compare" class="btn action">Compare Sessions</button>
+                <div id="comparison-results" class="results-box"></div>
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
