@@ -77,11 +77,19 @@ class BehavioralVerification {
             sidebarId: document.getElementById('sidebar-id'),
             sidebarAvatar: document.getElementById('sidebar-avatar'),
 
+            // Logout Modal
+            logoutModal: document.getElementById('logout-modal'),
+            logoutMessage: document.getElementById('logout-message'),
+            btnConfirmLogout: document.getElementById('btn-confirm-logout'),
+            closeLogoutModalBtns: document.querySelectorAll('.close-logout-modal'),
+
             // History
             navHistory: document.getElementById('nav-history'),
             mobileNavHistory: document.getElementById('mobile-nav-history'),
             navHome: document.querySelector('.nav-item.active'), // Assuming first one is home initially
             mobileNavHome: document.getElementById('mobile-nav-home'),
+            mobileNavProfile: document.getElementById('mobile-nav-profile'),
+            mobileNavAvatar: document.getElementById('mobile-nav-avatar'),
             historySection: document.getElementById('history-section'),
             statusSection: document.querySelector('.status-section'),
             attemptsSummary: document.getElementById('attempts-summary'),
@@ -138,6 +146,21 @@ class BehavioralVerification {
         this.elements.closeModalBtns.forEach(btn => {
             btn.addEventListener('click', () => this.closeProfileModal());
         });
+        
+        // Logout Modal Events
+        if (this.elements.btnConfirmLogout) {
+            this.elements.btnConfirmLogout.addEventListener('click', () => this.confirmLogout());
+        }
+        this.elements.closeLogoutModalBtns.forEach(btn => {
+            btn.addEventListener('click', () => this.closeLogoutModal());
+        });
+        
+        if (this.elements.mobileNavProfile) {
+            this.elements.mobileNavProfile.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.openProfileModal();
+            });
+        }
 
         // History Navigation
         this.elements.navHistory.addEventListener('click', (e) => {
@@ -204,6 +227,11 @@ class BehavioralVerification {
     showAuthModal() {
         this.elements.authModal.style.display = 'flex';
         this.switchAuthTab('login');
+        
+        // Hide mobile nav profile button when logged out
+        if (this.elements.mobileNavProfile) {
+            this.elements.mobileNavProfile.style.display = 'none';
+        }
     }
 
     closeAuthModal() {
@@ -345,6 +373,22 @@ class BehavioralVerification {
         this.elements.sidebarId.textContent = this.state.isGuest ? 'Guest' : '@' + username.toLowerCase();
         this.elements.sidebarAvatar.textContent = username.charAt(0).toUpperCase();
         
+        // Update mobile nav avatar
+        if (this.elements.mobileNavAvatar) {
+            this.elements.mobileNavAvatar.textContent = username.charAt(0).toUpperCase();
+        }
+        
+        // Update mobile nav profile text with username
+        const mobileNavProfileText = this.elements.mobileNavProfile?.querySelector('span');
+        if (mobileNavProfileText) {
+            mobileNavProfileText.textContent = username;
+        }
+        
+        // Show the mobile nav profile button (in case it was hidden)
+        if (this.elements.mobileNavProfile) {
+            this.elements.mobileNavProfile.style.display = 'flex';
+        }
+        
         // Update profile modal
         if (this.elements.profileAvatarLarge) {
             this.elements.profileAvatarLarge.textContent = username.charAt(0).toUpperCase();
@@ -375,30 +419,43 @@ class BehavioralVerification {
             ? 'Are you sure you want to logout?' 
             : 'Are you sure you want to logout? Your verification history will be preserved.';
             
-        if (confirm(message)) {
-            // Clear session
-            localStorage.removeItem('clickExp_session');
-            
-            // If guest, clear their history too
-            if (this.state.isGuest) {
-                localStorage.removeItem('clickExp_history');
-            }
-            
-            // Reset state
-            this.state.isAuthenticated = false;
-            this.state.isGuest = false;
-            this.state.currentUser = null;
-            this.state.sessionToken = null;
-            
-            // Close modals
-            this.closeProfileModal();
-            
-            // Reset verification state
-            this.resetAll();
-            
-            // Show auth modal
-            this.showAuthModal();
+        this.elements.logoutMessage.textContent = message;
+        this.elements.logoutModal.style.display = 'flex';
+        this.closeProfileModal();
+    }
+
+    closeLogoutModal() {
+        this.elements.logoutModal.style.display = 'none';
+    }
+
+    confirmLogout() {
+        // Clear session
+        localStorage.removeItem('clickExp_session');
+        
+        // If guest, clear their history too
+        if (this.state.isGuest) {
+            localStorage.removeItem('clickExp_history');
         }
+        
+        // Reset state
+        this.state.isAuthenticated = false;
+        this.state.isGuest = false;
+        this.state.currentUser = null;
+        this.state.sessionToken = null;
+        
+        // Close modals
+        this.closeLogoutModal();
+        
+        // Reset verification state
+        this.resetAll();
+        
+        // Hide mobile nav profile button
+        if (this.elements.mobileNavProfile) {
+            this.elements.mobileNavProfile.style.display = 'none';
+        }
+        
+        // Show auth modal
+        this.showAuthModal();
     }
 
     // --- History Methods ---
@@ -422,6 +479,7 @@ class BehavioralVerification {
 
         this.renderHistoryList();
         this.closeSidebar(); // For mobile
+        this.closeProfileModal();
     }
 
     showHome() {
@@ -452,6 +510,7 @@ class BehavioralVerification {
         if (this.elements.mobileNavHome) this.elements.mobileNavHome.classList.add('active');
         
         this.closeSidebar(); // For mobile
+        this.closeProfileModal();
     }
 
     renderHistoryList() {
