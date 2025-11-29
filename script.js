@@ -201,7 +201,7 @@ class BehavioralVerification {
     }
 
     checkAuthStatus() {
-        const session = localStorage.getItem('clickExp_session');
+        const session = localStorage.getItem('clickTracker_session');
         if (session) {
             const sessionData = JSON.parse(session);
             const now = Date.now();
@@ -216,7 +216,7 @@ class BehavioralVerification {
                 return;
             } else {
                 // Session expired
-                localStorage.removeItem('clickExp_session');
+                localStorage.removeItem('clickTracker_session');
             }
         }
         
@@ -283,7 +283,7 @@ class BehavioralVerification {
         }
 
         // Check if username already exists
-        const users = JSON.parse(localStorage.getItem('clickExp_users') || '{}');
+        const users = JSON.parse(localStorage.getItem('clickTracker_users') || '{}');
         if (users[username.toLowerCase()]) {
             this.showMessage('register', 'Username already taken. Please choose another.', true);
             return;
@@ -297,7 +297,7 @@ class BehavioralVerification {
 
         // Save user
         users[username.toLowerCase()] = user;
-        localStorage.setItem('clickExp_users', JSON.stringify(users));
+        localStorage.setItem('clickTracker_users', JSON.stringify(users));
 
         // Auto-login
         this.showMessage('register', 'Account created! Logging you in...', false);
@@ -317,7 +317,7 @@ class BehavioralVerification {
         }
 
         // Check credentials
-        const users = JSON.parse(localStorage.getItem('clickExp_users') || '{}');
+        const users = JSON.parse(localStorage.getItem('clickTracker_users') || '{}');
         const user = users[username.toLowerCase()];
 
         if (!user) {
@@ -353,7 +353,7 @@ class BehavioralVerification {
             isGuest
         };
 
-        localStorage.setItem('clickExp_session', JSON.stringify(session));
+        localStorage.setItem('clickTracker_session', JSON.stringify(session));
         
         this.state.isAuthenticated = true;
         this.state.isGuest = isGuest;
@@ -430,11 +430,11 @@ class BehavioralVerification {
 
     confirmLogout() {
         // Clear session
-        localStorage.removeItem('clickExp_session');
+        localStorage.removeItem('clickTracker_session');
         
         // If guest, clear their history too
         if (this.state.isGuest) {
-            localStorage.removeItem('clickExp_history');
+            localStorage.removeItem('clickTracker_history');
         }
         
         // Reset state
@@ -514,7 +514,7 @@ class BehavioralVerification {
     }
 
     renderHistoryList() {
-        const history = JSON.parse(localStorage.getItem('clickExp_history') || '[]');
+        const history = JSON.parse(localStorage.getItem('clickTracker_history') || '[]');
         const listContainer = this.elements.historyList;
         listContainer.innerHTML = '';
 
@@ -561,7 +561,7 @@ class BehavioralVerification {
     }
 
     saveVerificationResult(isVerified, isSuspicious, stats) {
-        const history = JSON.parse(localStorage.getItem('clickExp_history') || '[]');
+        const history = JSON.parse(localStorage.getItem('clickTracker_history') || '[]');
         
         // Calculate average speed across all attempts
         let totalDuration = 0;
@@ -583,12 +583,12 @@ class BehavioralVerification {
         };
 
         history.push(record);
-        localStorage.setItem('clickExp_history', JSON.stringify(history));
+        localStorage.setItem('clickTracker_history', JSON.stringify(history));
     }
 
     clearHistory() {
         if (confirm('Are you sure you want to clear all verification history?')) {
-            localStorage.removeItem('clickExp_history');
+            localStorage.removeItem('clickTracker_history');
             this.renderHistoryList();
         }
     }
