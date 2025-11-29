@@ -180,7 +180,7 @@ class ClickTracker {
         if (dataA.length === 0 && dataB.length === 0) {
             this.elements.results.innerHTML = `
                 <div class="empty-comparison">
-                    <span class="empty-icon">📊</span>
+                    <span class="empty-icon"><i class="fa-solid fa-chart-simple"></i></span>
                     <p>No data to compare. Record both sessions first.</p>
                 </div>
             `;
@@ -191,7 +191,7 @@ class ClickTracker {
             const missing = dataA.length === 0 ? 'A' : 'B';
             this.elements.results.innerHTML = `
                 <div class="empty-comparison">
-                    <span class="empty-icon">⚠️</span>
+                    <span class="empty-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
                     <p>Session ${missing} has no data. Record both sessions to compare.</p>
                 </div>
             `;
@@ -210,7 +210,7 @@ class ClickTracker {
         const accuracyPercent = ((stats.matches / stats.minLength) * 100).toFixed(1);
         html += `
             <div class="stat-card ${stats.matches === stats.minLength ? 'success' : 'warning'}">
-                <div class="stat-icon">${stats.matches === stats.minLength ? '✓' : '⚠'}</div>
+                <div class="stat-icon">${stats.matches === stats.minLength ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-triangle-exclamation"></i>'}</div>
                 <div class="stat-content">
                     <div class="stat-label">Sequence Accuracy</div>
                     <div class="stat-value">${accuracyPercent}%</div>
@@ -223,7 +223,7 @@ class ClickTracker {
         const avgTimeDiff = stats.totalTimeDiff / stats.minLength;
         html += `
             <div class="stat-card">
-                <div class="stat-icon">⏱</div>
+                <div class="stat-icon"><i class="fa-solid fa-stopwatch"></i></div>
                 <div class="stat-content">
                     <div class="stat-label">Avg Time Difference</div>
                     <div class="stat-value">${avgTimeDiff.toFixed(3)}s</div>
@@ -235,7 +235,7 @@ class ClickTracker {
         // Duration Card
         html += `
             <div class="stat-card">
-                <div class="stat-icon">📏</div>
+                <div class="stat-icon"><i class="fa-solid fa-ruler"></i></div>
                 <div class="stat-content">
                     <div class="stat-label">Session Lengths</div>
                     <div class="stat-value">${dataA.length} vs ${dataB.length}</div>
@@ -251,7 +251,7 @@ class ClickTracker {
         const speedDiff = Math.abs(speedA - speedB).toFixed(3);
         html += `
             <div class="stat-card">
-                <div class="stat-icon">🚀</div>
+                <div class="stat-icon"><i class="fa-solid fa-rocket"></i></div>
                 <div class="stat-content">
                     <div class="stat-label">Completion Time</div>
                     <div class="stat-value">${speedA.toFixed(2)}s vs ${speedB.toFixed(2)}s</div>
@@ -316,8 +316,8 @@ class ClickTracker {
                                     <span>${itemB.time.toFixed(3)}s</span>
                                 </div>
                                 ${match ? 
-                                    '<span class="match-badge">✓ Match</span>' : 
-                                    '<span class="mismatch-badge">✗ Mismatch</span>'
+                                    '<span class="match-badge"><i class="fa-solid fa-check"></i> Match</span>' : 
+                                    '<span class="mismatch-badge"><i class="fa-solid fa-xmark"></i> Mismatch</span>'
                                 }
                             </div>
                         </div>
@@ -334,7 +334,7 @@ class ClickTracker {
         if (stats.lengthMatch && stats.matches === stats.minLength) {
             html += `
                 <div class="summary-message success">
-                    <span class="summary-icon">🎉</span>
+                    <span class="summary-icon"><i class="fa-solid fa-check-double"></i></span>
                     <div>
                         <strong>Perfect Match!</strong>
                         <p>Both sessions have identical sequences with an average timing difference of ${avgTimeDiff.toFixed(3)}s per click.</p>
@@ -348,7 +348,7 @@ class ClickTracker {
             
             html += `
                 <div class="summary-message warning">
-                    <span class="summary-icon">📋</span>
+                    <span class="summary-icon"><i class="fa-solid fa-clipboard-list"></i></span>
                     <div>
                         <strong>Differences Found</strong>
                         <p>${issues.join(', ')}</p>
