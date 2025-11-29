@@ -23,28 +23,16 @@
                     <span class="nav-icon"><i class="fa-solid fa-house"></i></span>
                     <span>Home</span>
                 </a>
-                <a href="#" class="nav-item">
-                    <span class="nav-icon"><i class="fa-solid fa-clipboard-list"></i></span>
-                    <span>My Services</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <span class="nav-icon"><i class="fa-solid fa-users"></i></span>
-                    <span>Family</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <span class="nav-icon"><i class="fa-solid fa-user-tie"></i></span>
-                    <span>Workers</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <span class="nav-icon"><i class="fa-solid fa-grip"></i></span>
-                    <span>Other Services</span>
+                <a href="#" class="nav-item" id="nav-history">
+                    <span class="nav-icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
+                    <span>History</span>
                 </a>
             </nav>
-            <div class="user-profile-mini">
-                <div class="avatar">U</div>
+            <div class="user-profile-mini" id="user-profile-btn">
+                <div class="avatar" id="sidebar-avatar">U</div>
                 <div class="user-info">
-                    <span class="name">User</span>
-                    <span class="role">ID No. 12496</span>
+                    <span class="name" id="sidebar-name">User</span>
+                    <span class="role" id="sidebar-id">ID: -</span>
                 </div>
             </div>
         </aside>
@@ -243,30 +231,112 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- History Section -->
+                <div class="history-section" id="history-section" style="display: none;">
+                    <div class="section-header">
+                        <h2>Verification History</h2>
+                        <button id="btn-clear-history" class="btn text-danger">
+                            <i class="fa-solid fa-trash"></i> Clear History
+                        </button>
+                    </div>
+                    <div class="history-list" id="history-list">
+                        <!-- History items will be populated here -->
+                        <div class="empty-history">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            <p>No verification history found</p>
+                        </div>
+                    </div>
+                </div>
             </main>
         </div>
 
+        <!-- Authentication Modal -->
+        <div class="modal-overlay" id="auth-modal" style="display: none;">
+            <div class="modal-card auth-modal">
+                <div class="modal-header">
+                    <h3 id="auth-modal-title">Welcome to ClickExp</h3>
+                </div>
+                <div class="modal-body">
+                    <!-- Tab Switcher -->
+                    <div class="auth-tabs">
+                        <button class="auth-tab active" data-tab="login">Login</button>
+                        <button class="auth-tab" data-tab="register">Sign Up</button>
+                    </div>
+
+                    <!-- Login Form -->
+                    <div class="auth-form" id="login-form">
+                        <div class="form-group">
+                            <label for="login-username">Username</label>
+                            <input type="text" id="login-username" placeholder="Enter your username" autocomplete="username">
+                        </div>
+                        <div class="form-message" id="login-message"></div>
+                        <button class="btn primary full-width" id="btn-login">
+                            <span class="btn-icon"><i class="fa-solid fa-right-to-bracket"></i></span>
+                            <span>Login</span>
+                        </button>
+                        <button class="btn text-secondary full-width" id="btn-guest-mode">
+                            <span class="btn-icon"><i class="fa-solid fa-user"></i></span>
+                            <span>Continue as Guest</span>
+                        </button>
+                    </div>
+
+                    <!-- Register Form -->
+                    <div class="auth-form" id="register-form" style="display: none;">
+                        <div class="form-group">
+                            <label for="register-username">Choose Username</label>
+                            <input type="text" id="register-username" placeholder="Enter a unique username" autocomplete="username">
+                        </div>
+                        <div class="form-message" id="register-message"></div>
+                        <button class="btn primary full-width" id="btn-register">
+                            <span class="btn-icon"><i class="fa-solid fa-user-plus"></i></span>
+                            <span>Sign Up</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Profile Modal (for logged-in users) -->
+        <div class="modal-overlay" id="profile-modal" style="display: none;">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h3>User Profile</h3>
+                    <button class="icon-btn close-modal"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="profile-info">
+                        <div class="profile-avatar-large" id="profile-avatar-large">U</div>
+                        <div class="profile-details">
+                            <div class="form-group">
+                                <label>Username</label>
+                                <div class="form-value" id="profile-username-display">@username</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Member Since</label>
+                                <div class="form-value" id="profile-since-display">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn text-danger" id="btn-logout">
+                        <i class="fa-solid fa-right-from-bracket"></i> Logout
+                    </button>
+                    <div style="flex: 1;"></div>
+                    <button class="btn secondary close-modal">Close</button>
+                </div>
+            </div>
+
         <!-- Bottom Navigation for Mobile -->
         <nav class="bottom-nav">
-            <a href="#" class="bottom-nav-item active">
+            <a href="#" class="bottom-nav-item active" id="mobile-nav-home">
                 <i class="fa-solid fa-house"></i>
                 <span>Home</span>
             </a>
-            <a href="#" class="bottom-nav-item">
-                <i class="fa-solid fa-clipboard-list"></i>
-                <span>My Services</span>
-            </a>
-            <a href="#" class="bottom-nav-item">
-                <i class="fa-solid fa-users"></i>
-                <span>Family</span>
-            </a>
-            <a href="#" class="bottom-nav-item">
-                <i class="fa-solid fa-user-tie"></i>
-                <span>Workers</span>
-            </a>
-            <a href="#" class="bottom-nav-item">
-                <i class="fa-solid fa-grip"></i>
-                <span>Other</span>
+            <a href="#" class="bottom-nav-item" id="mobile-nav-history">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>History</span>
             </a>
         </nav>
     </div>

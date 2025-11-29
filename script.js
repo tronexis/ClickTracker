@@ -8,7 +8,11 @@ class BehavioralVerification {
                 { pattern: [], timings: [], clicks: 0, duration: 0 },
                 { pattern: [], timings: [], clicks: 0, duration: 0 },
                 { pattern: [], timings: [], clicks: 0, duration: 0 }
-            ]
+            ],
+            isAuthenticated: false,
+            isGuest: false,
+            currentUser: null,
+            sessionToken: null
         };
 
         this.elements = {
@@ -41,13 +45,57 @@ class BehavioralVerification {
             // Mobile Menu
             mobileMenuBtn: document.getElementById('mobile-menu-btn'),
             sidebarOverlay: document.getElementById('sidebar-overlay'),
-            sidebar: document.querySelector('.sidebar')
+            sidebar: document.querySelector('.sidebar'),
+
+            // Authentication Modal
+            authModal: document.getElementById('auth-modal'),
+            closeAuthModalBtns: document.querySelectorAll('.close-auth-modal'),
+            authTabs: document.querySelectorAll('.auth-tab'),
+            loginForm: document.getElementById('login-form'),
+            registerForm: document.getElementById('register-form'),
+            
+            // Login Form
+            loginUsername: document.getElementById('login-username'),
+            loginMessage: document.getElementById('login-message'),
+            btnLogin: document.getElementById('btn-login'),
+            btnGuestMode: document.getElementById('btn-guest-mode'),
+            
+            // Register Form
+            registerUsername: document.getElementById('register-username'),
+            registerMessage: document.getElementById('register-message'),
+            btnRegister: document.getElementById('btn-register'),
+
+            // User Profile Modal
+            userProfileBtn: document.getElementById('user-profile-btn'),
+            profileModal: document.getElementById('profile-modal'),
+            profileAvatarLarge: document.getElementById('profile-avatar-large'),
+            profileUsernameDisplay: document.getElementById('profile-username-display'),
+            profileSinceDisplay: document.getElementById('profile-since-display'),
+            btnLogout: document.getElementById('btn-logout'),
+            closeModalBtns: document.querySelectorAll('.close-modal'),
+            sidebarName: document.getElementById('sidebar-name'),
+            sidebarId: document.getElementById('sidebar-id'),
+            sidebarAvatar: document.getElementById('sidebar-avatar'),
+
+            // History
+            navHistory: document.getElementById('nav-history'),
+            mobileNavHistory: document.getElementById('mobile-nav-history'),
+            navHome: document.querySelector('.nav-item.active'), // Assuming first one is home initially
+            mobileNavHome: document.getElementById('mobile-nav-home'),
+            historySection: document.getElementById('history-section'),
+            statusSection: document.querySelector('.status-section'),
+            attemptsSummary: document.getElementById('attempts-summary'),
+            historyList: document.getElementById('history-list'),
+            btnClearHistory: document.getElementById('btn-clear-history')
         };
 
         this.init();
     }
 
     init() {
+        // Check authentication status
+        this.checkAuthStatus();
+
         // Start/Reset buttons
         this.elements.btnStart.addEventListener('click', () => this.startAttempt());
         this.elements.btnComplete.addEventListener('click', () => this.completeAttempt());
@@ -65,7 +113,428 @@ class BehavioralVerification {
         if (this.elements.sidebarOverlay) {
             this.elements.sidebarOverlay.addEventListener('click', () => this.closeSidebar());
         }
+
+        // Authentication Events
+        this.elements.authTabs.forEach(tab => {
+            tab.addEventListener('click', (e) => this.switchAuthTab(e.target.dataset.tab));
+        });
+        this.elements.btnLogin.addEventListener('click', () => this.login());
+        this.elements.btnRegister.addEventListener('click', () => this.register());
+        this.elements.btnGuestMode.addEventListener('click', () => this.continueAsGuest());
+        
+        // Add Enter key support for login/register
+        this.elements.loginUsername.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.login();
+        });
+        this.elements.registerUsername.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.register();
+        });
+
+        // User Profile Events
+        this.elements.userProfileBtn.addEventListener('click', () => this.openProfileModal());
+        if (this.elements.btnLogout) {
+            this.elements.btnLogout.addEventListener('click', () => this.logout());
+        }
+        this.elements.closeModalBtns.forEach(btn => {
+            btn.addEventListener('click', () => this.closeProfileModal());
+        });
+
+        // History Navigation
+        this.elements.navHistory.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showHistory();
+        });
+        if (this.elements.mobileNavHistory) {
+            this.elements.mobileNavHistory.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showHistory();
+            });
+        }
+
+        // Home Navigation
+        const homeHandler = (e) => {
+            if (e) e.preventDefault();
+            this.showHome();
+        };
+        document.querySelectorAll('.nav-item').forEach(item => {
+            if (item.textContent.includes('Home')) {
+                item.addEventListener('click', homeHandler);
+            }
+        });
+        if (this.elements.mobileNavHome) {
+            this.elements.mobileNavHome.addEventListener('click', homeHandler);
+        }
+
+        // Clear History
+        if (this.elements.btnClearHistory) {
+            this.elements.btnClearHistory.addEventListener('click', () => this.clearHistory());
+        }
     }
+
+    // --- Authentication Methods ---
+
+    generateSessionToken() {
+        return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    checkAuthStatus() {
+        const session = localStorage.getItem('clickExp_session');
+        if (session) {
+            const sessionData = JSON.parse(session);
+            const now = Date.now();
+            
+            // Check if session is still valid (24 hours)
+            if (sessionData.expiry > now) {
+                this.state.isAuthenticated = true;
+                this.state.isGuest = sessionData.isGuest || false;
+                this.state.currentUser = sessionData.user;
+                this.state.sessionToken = sessionData.token;
+                this.updateUserProfileUI();
+                return;
+            } else {
+                // Session expired
+                localStorage.removeItem('clickExp_session');
+            }
+        }
+        
+        // No valid session, show auth modal
+        this.showAuthModal();
+    }
+
+    showAuthModal() {
+        this.elements.authModal.style.display = 'flex';
+        this.switchAuthTab('login');
+    }
+
+    closeAuthModal() {
+        this.elements.authModal.style.display = 'none';
+    }
+
+    switchAuthTab(tab) {
+        // Update tabs
+        this.elements.authTabs.forEach(t => {
+            t.classList.toggle('active', t.dataset.tab === tab);
+        });
+        
+        // Show/hide forms
+        if (tab === 'login') {
+            this.elements.loginForm.style.display = 'flex';
+            this.elements.registerForm.style.display = 'none';
+            this.clearMessage('login');
+        } else {
+            this.elements.loginForm.style.display = 'none';
+            this.elements.registerForm.style.display = 'flex';
+            this.clearMessage('register');
+        }
+    }
+
+    showMessage(type, message, isError = false) {
+        const messageEl = type === 'login' ? this.elements.loginMessage : this.elements.registerMessage;
+        messageEl.textContent = message;
+        messageEl.className = 'form-message ' + (isError ? 'error' : 'success');
+    }
+
+    clearMessage(type) {
+        const messageEl = type === 'login' ? this.elements.loginMessage : this.elements.registerMessage;
+        messageEl.textContent = '';
+        messageEl.className = 'form-message';
+    }
+
+    register() {
+        const username = this.elements.registerUsername.value.trim();
+
+        // Validation
+        if (!username) {
+            this.showMessage('register', 'Please enter a username', true);
+            return;
+        }
+
+        if (username.length < 3) {
+            this.showMessage('register', 'Username must be at least 3 characters', true);
+            return;
+        }
+
+        // Check if username already exists
+        const users = JSON.parse(localStorage.getItem('clickExp_users') || '{}');
+        if (users[username.toLowerCase()]) {
+            this.showMessage('register', 'Username already taken. Please choose another.', true);
+            return;
+        }
+
+        // Create user
+        const user = {
+            username,
+            registeredAt: Date.now()
+        };
+
+        // Save user
+        users[username.toLowerCase()] = user;
+        localStorage.setItem('clickExp_users', JSON.stringify(users));
+
+        // Auto-login
+        this.showMessage('register', 'Account created! Logging you in...', false);
+        setTimeout(() => {
+            this.createSession(user, false);
+            this.closeAuthModal();
+        }, 800);
+    }
+
+    login() {
+        const username = this.elements.loginUsername.value.trim();
+
+        // Validation
+        if (!username) {
+            this.showMessage('login', 'Please enter your username', true);
+            return;
+        }
+
+        // Check credentials
+        const users = JSON.parse(localStorage.getItem('clickExp_users') || '{}');
+        const user = users[username.toLowerCase()];
+
+        if (!user) {
+            this.showMessage('login', 'Username not found', true);
+            return;
+        }
+
+        // Login successful
+        this.showMessage('login', 'Welcome back!', false);
+        setTimeout(() => {
+            this.createSession(user, false);
+            this.closeAuthModal();
+        }, 500);
+    }
+
+    continueAsGuest() {
+        const guestUser = {
+            username: 'Guest',
+            registeredAt: Date.now()
+        };
+        this.createSession(guestUser, true);
+        this.closeAuthModal();
+    }
+
+    createSession(user, isGuest = false) {
+        const token = this.generateSessionToken();
+        const expiry = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+
+        const session = {
+            user: { username: user.username, registeredAt: user.registeredAt },
+            token,
+            expiry,
+            isGuest
+        };
+
+        localStorage.setItem('clickExp_session', JSON.stringify(session));
+        
+        this.state.isAuthenticated = true;
+        this.state.isGuest = isGuest;
+        this.state.currentUser = session.user;
+        this.state.sessionToken = token;
+        
+        this.updateUserProfileUI();
+    }
+
+    updateUserProfileUI() {
+        if (!this.state.currentUser) return;
+        
+        const username = this.state.currentUser.username;
+        
+        // Update sidebar
+        this.elements.sidebarName.textContent = username;
+        this.elements.sidebarId.textContent = this.state.isGuest ? 'Guest' : '@' + username.toLowerCase();
+        this.elements.sidebarAvatar.textContent = username.charAt(0).toUpperCase();
+        
+        // Update profile modal
+        if (this.elements.profileAvatarLarge) {
+            this.elements.profileAvatarLarge.textContent = username.charAt(0).toUpperCase();
+        }
+        if (this.elements.profileUsernameDisplay) {
+            this.elements.profileUsernameDisplay.textContent = '@' + username.toLowerCase();
+        }
+        if (this.elements.profileSinceDisplay && this.state.currentUser.registeredAt) {
+            const date = new Date(this.state.currentUser.registeredAt);
+            this.elements.profileSinceDisplay.textContent = date.toLocaleDateString();
+        }
+    }
+
+    openProfileModal() {
+        if (!this.state.isAuthenticated) {
+            this.showAuthModal();
+            return;
+        }
+        this.elements.profileModal.style.display = 'flex';
+    }
+
+    closeProfileModal() {
+        this.elements.profileModal.style.display = 'none';
+    }
+
+    logout() {
+        const message = this.state.isGuest 
+            ? 'Are you sure you want to logout?' 
+            : 'Are you sure you want to logout? Your verification history will be preserved.';
+            
+        if (confirm(message)) {
+            // Clear session
+            localStorage.removeItem('clickExp_session');
+            
+            // If guest, clear their history too
+            if (this.state.isGuest) {
+                localStorage.removeItem('clickExp_history');
+            }
+            
+            // Reset state
+            this.state.isAuthenticated = false;
+            this.state.isGuest = false;
+            this.state.currentUser = null;
+            this.state.sessionToken = null;
+            
+            // Close modals
+            this.closeProfileModal();
+            
+            // Reset verification state
+            this.resetAll();
+            
+            // Show auth modal
+            this.showAuthModal();
+        }
+    }
+
+    // --- History Methods ---
+
+    showHistory() {
+        // Hide Verification Views
+        this.elements.statusSection.style.display = 'none';
+        this.elements.interactionZone.style.display = 'none';
+        this.elements.attemptsSummary.style.display = 'none';
+        this.elements.verificationResult.style.display = 'none';
+        
+        // Show History View
+        this.elements.historySection.style.display = 'block';
+        
+        // Update Nav State
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        this.elements.navHistory.classList.add('active');
+        
+        document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active'));
+        if (this.elements.mobileNavHistory) this.elements.mobileNavHistory.classList.add('active');
+
+        this.renderHistoryList();
+        this.closeSidebar(); // For mobile
+    }
+
+    showHome() {
+        // Show Verification Views
+        this.elements.statusSection.style.display = 'flex'; // status-section is flex
+        this.elements.attemptsSummary.style.display = 'block';
+        
+        // Restore state of interaction zone / result based on current flow
+        if (this.state.currentAttempt > 0 && this.state.currentAttempt <= 3 && this.elements.verificationResult.style.display !== 'block') {
+             this.elements.interactionZone.style.display = 'block';
+        } else if (this.elements.verificationResult.style.display === 'block') {
+             // Keep result visible
+        } else {
+             this.elements.interactionZone.style.display = 'none';
+        }
+
+        // Hide History View
+        this.elements.historySection.style.display = 'none';
+
+        // Update Nav State
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        // Find home nav item again to be safe
+        document.querySelectorAll('.nav-item').forEach(item => {
+            if (item.textContent.includes('Home')) item.classList.add('active');
+        });
+
+        document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active'));
+        if (this.elements.mobileNavHome) this.elements.mobileNavHome.classList.add('active');
+        
+        this.closeSidebar(); // For mobile
+    }
+
+    renderHistoryList() {
+        const history = JSON.parse(localStorage.getItem('clickExp_history') || '[]');
+        const listContainer = this.elements.historyList;
+        listContainer.innerHTML = '';
+
+        if (history.length === 0) {
+            listContainer.innerHTML = `
+                <div class="empty-history">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <p>No verification history found</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Sort by newest first
+        history.reverse().forEach(record => {
+            const date = new Date(record.timestamp);
+            const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+            
+            const statusClass = record.isVerified ? 'verified' : (record.isSuspicious ? 'suspicious' : 'warning');
+            const statusIcon = record.isVerified ? 'fa-circle-check' : (record.isSuspicious ? 'fa-triangle-exclamation' : 'fa-clipboard-question');
+            const statusText = record.isVerified ? 'Verified' : (record.isSuspicious ? 'Suspicious' : 'Inconclusive');
+
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `
+                <div class="history-icon ${statusClass}">
+                    <i class="fa-solid ${statusIcon}"></i>
+                </div>
+                <div class="history-info">
+                    <div class="history-header">
+                        <span class="history-status ${statusClass}">${statusText}</span>
+                        <span class="history-date">${dateStr}</span>
+                    </div>
+                    <div class="history-user">@${record.user.username}</div>
+                    <div class="history-stats">
+                        <span>Similarity: ${(record.stats.overallSimilarity * 100).toFixed(1)}%</span>
+                        <span>•</span>
+                        <span>Avg Speed: ${record.avgSpeed.toFixed(2)}s</span>
+                    </div>
+                </div>
+            `;
+            listContainer.appendChild(item);
+        });
+    }
+
+    saveVerificationResult(isVerified, isSuspicious, stats) {
+        const history = JSON.parse(localStorage.getItem('clickExp_history') || '[]');
+        
+        // Calculate average speed across all attempts
+        let totalDuration = 0;
+        let totalClicks = 0;
+        this.state.attempts.forEach(a => {
+            totalDuration += a.duration;
+            totalClicks += a.clicks;
+        });
+        const avgSpeed = totalClicks > 0 ? totalDuration / totalClicks : 0;
+
+        const record = {
+            id: Date.now(),
+            timestamp: Date.now(),
+            user: this.state.currentUser,
+            isVerified,
+            isSuspicious,
+            stats,
+            avgSpeed
+        };
+
+        history.push(record);
+        localStorage.setItem('clickExp_history', JSON.stringify(history));
+    }
+
+    clearHistory() {
+        if (confirm('Are you sure you want to clear all verification history?')) {
+            localStorage.removeItem('clickExp_history');
+            this.renderHistoryList();
+        }
+    }
+
+    // --- Existing Methods (Modified) ---
 
     toggleSidebar() {
         this.elements.sidebar.classList.toggle('active');
@@ -80,6 +549,12 @@ class BehavioralVerification {
     }
 
     startAttempt() {
+        // Require authentication
+        if (!this.state.isAuthenticated) {
+            this.showAuthModal();
+            return;
+        }
+        
         this.state.currentAttempt++;
         
         if (this.state.currentAttempt > 3) {
@@ -190,6 +665,7 @@ class BehavioralVerification {
             this.elements.attemptTitle.textContent = 'Ready to Start';
             this.elements.attemptSubtitle.textContent = 'Click "Start Verification" to begin Attempt 1 of 3';
             this.elements.btnStart.innerHTML = '<span class="btn-icon"><i class="fa-solid fa-play"></i></span><span>Start Verification</span>';
+            this.elements.btnStart.style.display = 'inline-flex';
         } else if (this.state.currentAttempt < 3) {
             this.elements.attemptTitle.textContent = `Attempt ${this.state.currentAttempt} Complete`;
             this.elements.attemptSubtitle.textContent = `Ready to begin Attempt ${this.state.currentAttempt + 1} of 3`;
@@ -284,14 +760,19 @@ class BehavioralVerification {
             resultMessage = 'Your attempts show moderate consistency. Additional verification may be required.';
         }
         
-        // Display result
-        this.showVerificationResult(isVerified, isSuspicious, {
+        const stats = {
             overallSimilarity,
             attempt3Deviation,
             similarity12: avgSimilarity12,
             similarity13: avgSimilarity13,
             similarity23: avgSimilarity23
-        });
+        };
+
+        // Save result to history
+        this.saveVerificationResult(isVerified, isSuspicious, stats);
+
+        // Display result
+        this.showVerificationResult(isVerified, isSuspicious, stats);
     }
 
     calculateSimilarity(attempt1, attempt2) {
