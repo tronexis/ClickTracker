@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Click Interaction Tracker</title>
+    <title>Behavioral Verification - ClickExp</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,120 +12,265 @@
 </head>
 <body>
     <div class="dashboard-layout">
+        <!-- Sidebar for Desktop -->
         <aside class="sidebar">
             <div class="brand">
-                <div class="logo-icon"><i class="fa-solid fa-bolt"></i></div>
+                <div class="logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
                 <h2>ClickExp</h2>
             </div>
             <nav class="nav-menu">
                 <a href="#" class="nav-item active">
-                    <span class="nav-icon"><i class="fa-solid fa-chart-simple"></i></span>
-                    <span>Dashboard</span>
+                    <span class="nav-icon"><i class="fa-solid fa-house"></i></span>
+                    <span>Home</span>
                 </a>
                 <a href="#" class="nav-item">
-                    <span class="nav-icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
-                    <span>History</span>
+                    <span class="nav-icon"><i class="fa-solid fa-clipboard-list"></i></span>
+                    <span>My Services</span>
                 </a>
                 <a href="#" class="nav-item">
-                    <span class="nav-icon"><i class="fa-solid fa-gear"></i></span>
-                    <span>Settings</span>
+                    <span class="nav-icon"><i class="fa-solid fa-users"></i></span>
+                    <span>Family</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon"><i class="fa-solid fa-user-tie"></i></span>
+                    <span>Workers</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon"><i class="fa-solid fa-grip"></i></span>
+                    <span>Other Services</span>
                 </a>
             </nav>
             <div class="user-profile-mini">
                 <div class="avatar">U</div>
                 <div class="user-info">
                     <span class="name">User</span>
-                    <span class="role">Admin</span>
+                    <span class="role">ID No. 12496</span>
                 </div>
             </div>
         </aside>
 
+        <!-- Main Content -->
         <div class="main-wrapper">
             <header class="top-header">
                 <div class="header-title">
                     <button class="icon-btn mobile-menu-btn" id="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button>
-                    <h1>Interaction Tracker</h1>
+                    <h1>Behavioral Verification</h1>
                 </div>
                 <div class="header-actions">
+                    <button class="icon-btn"><i class="fa-solid fa-gear"></i></button>
                     <button class="icon-btn"><i class="fa-regular fa-bell"></i></button>
-                    <button class="icon-btn"><i class="fa-regular fa-circle-question"></i></button>
                 </div>
             </header>
 
             <main class="dashboard-content">
-                <div class="controls">
-                    <div class="session-controls">
-                        <button id="btn-start-a" class="btn primary">
-                            <span class="btn-icon"><i class="fa-solid fa-play"></i></span>
-                            <span>Start Session A</span>
+                <!-- Status Section -->
+                <div class="status-section">
+                    <div class="status-card">
+                        <div class="status-icon">
+                            <i class="fa-solid fa-clipboard-check"></i>
+                        </div>
+                        <div class="status-info">
+                            <h3 id="attempt-title">Ready to Start</h3>
+                            <p id="attempt-subtitle">Click "Start Verification" to begin Attempt 1 of 3</p>
+                        </div>
+                    </div>
+                    <button id="btn-start" class="btn primary large">
+                        <span class="btn-icon"><i class="fa-solid fa-play"></i></span>
+                        <span>Start Verification</span>
+                    </button>
+                </div>
+
+                <!-- Interaction Zone -->
+                <div class="interaction-zone" id="interaction-zone" style="display: none;">
+                    <div class="zone-header">
+                        <h3>Select your pattern</h3>
+                        <div class="timer-display">
+                            <i class="fa-solid fa-stopwatch"></i>
+                            <span id="timer">0.00s</span>
+                        </div>
+                    </div>
+                    <div class="buttons-container">
+                        <button class="choice-btn" data-id="1">
+                            <span class="btn-number">1</span>
+                            <span class="btn-label">Option 1</span>
                         </button>
-                        <button id="btn-start-b" class="btn primary">
-                            <span class="btn-icon"><i class="fa-solid fa-play"></i></span>
-                            <span>Start Session B</span>
+                        <button class="choice-btn" data-id="2">
+                            <span class="btn-number">2</span>
+                            <span class="btn-label">Option 2</span>
                         </button>
-                        <button id="btn-stop" class="btn warning" style="display: none;">
-                            <span class="btn-icon"><i class="fa-solid fa-stop"></i></span>
-                            <span>Stop Recording</span>
+                        <button class="choice-btn" data-id="3">
+                            <span class="btn-number">3</span>
+                            <span class="btn-label">Option 3</span>
                         </button>
+                        <button class="choice-btn" data-id="4">
+                            <span class="btn-number">4</span>
+                            <span class="btn-label">Option 4</span>
+                        </button>
+                        <button class="choice-btn" data-id="5">
+                            <span class="btn-number">5</span>
+                            <span class="btn-label">Option 5</span>
+                        </button>
+                    </div>
+                    <button id="btn-complete" class="btn secondary" style="display: none;">
+                        <span class="btn-icon"><i class="fa-solid fa-check"></i></span>
+                        <span>Complete Attempt</span>
+                    </button>
+                </div>
+
+                <!-- Attempts Summary -->
+                <div class="attempts-summary" id="attempts-summary">
+                    <h2>Verification Attempts</h2>
+                    <div class="attempts-grid">
+                        <!-- Attempt 1 -->
+                        <div class="attempt-card" id="attempt-card-1">
+                            <div class="attempt-header">
+                                <div class="attempt-title">
+                                    <i class="fa-solid fa-circle-1"></i>
+                                    <h4>Attempt 1</h4>
+                                </div>
+                                <span class="attempt-status pending">Pending</span>
+                            </div>
+                            <div class="attempt-body">
+                                <div class="empty-state">
+                                    <i class="fa-regular fa-clock"></i>
+                                    <p>Not started yet</p>
+                                </div>
+                                <div class="attempt-data" style="display: none;">
+                                    <div class="data-row">
+                                        <span class="label">Pattern:</span>
+                                        <span class="value pattern-value" id="pattern-1">-</span>
+                                    </div>
+                                    <div class="data-row">
+                                        <span class="label">Clicks:</span>
+                                        <span class="value" id="clicks-1">0</span>
+                                    </div>
+                                    <div class="data-row">
+                                        <span class="label">Duration:</span>
+                                        <span class="value" id="duration-1">0.00s</span>
+                                    </div>
+                                    <div class="data-row">
+                                        <span class="label">Avg Speed:</span>
+                                        <span class="value" id="speed-1">0.00s</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Attempt 2 -->
+                        <div class="attempt-card" id="attempt-card-2">
+                            <div class="attempt-header">
+                                <div class="attempt-title">
+                                    <i class="fa-solid fa-circle-2"></i>
+                                    <h4>Attempt 2</h4>
+                                </div>
+                                <span class="attempt-status pending">Pending</span>
+                            </div>
+                            <div class="attempt-body">
+                                <div class="empty-state">
+                                    <i class="fa-regular fa-clock"></i>
+                                    <p>Not started yet</p>
+                                </div>
+                                <div class="attempt-data" style="display: none;">
+                                    <div class="data-row">
+                                        <span class="label">Pattern:</span>
+                                        <span class="value pattern-value" id="pattern-2">-</span>
+                                    </div>
+                                    <div class="data-row">
+                                        <span class="label">Clicks:</span>
+                                        <span class="value" id="clicks-2">0</span>
+                                    </div>
+                                    <div class="data-row">
+                                        <span class="label">Duration:</span>
+                                        <span class="value" id="duration-2">0.00s</span>
+                                    </div>
+                                    <div class="data-row">
+                                        <span class="label">Avg Speed:</span>
+                                        <span class="value" id="speed-2">0.00s</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Attempt 3 -->
+                        <div class="attempt-card" id="attempt-card-3">
+                            <div class="attempt-header">
+                                <div class="attempt-title">
+                                    <i class="fa-solid fa-circle-3"></i>
+                                    <h4>Attempt 3</h4>
+                                </div>
+                                <span class="attempt-status pending">Pending</span>
+                            </div>
+                            <div class="attempt-body">
+                                <div class="empty-state">
+                                    <i class="fa-regular fa-clock"></i>
+                                    <p>Not started yet</p>
+                                </div>
+                                <div class="attempt-data" style="display: none;">
+                                    <div class="data-row">
+                                        <span class="label">Pattern:</span>
+                                        <span class="value pattern-value" id="pattern-3">-</span>
+                                    </div>
+                                    <div class="data-row">
+                                        <span class="label">Clicks:</span>
+                                        <span class="value" id="clicks-3">0</span>
+                                    </div>
+                                    <div class="data-row">
+                                        <span class="label">Duration:</span>
+                                        <span class="value" id="duration-3">0.00s</span>
+                                    </div>
+                                    <div class="data-row">
+                                        <span class="label">Avg Speed:</span>
+                                        <span class="value" id="speed-3">0.00s</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Verification Result -->
+                <div class="verification-result" id="verification-result" style="display: none;">
+                    <div class="result-card">
+                        <div class="result-icon" id="result-icon">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <h2 id="result-title">Analysis Complete</h2>
+                        <p id="result-message">Comparing your three attempts...</p>
+                        <div class="result-details" id="result-details"></div>
                         <button id="btn-reset" class="btn secondary">
                             <span class="btn-icon"><i class="fa-solid fa-rotate-right"></i></span>
-                            <span>Reset All</span>
+                            <span>Start New Verification</span>
                         </button>
                     </div>
-                    <div class="status-display">
-                        <span id="status-badge" class="status-badge">Ready</span>
-                        <span id="timer">0.00s</span>
-                    </div>
-                </div>
-
-                <div class="workspace">
-                    <div class="interaction-zone">
-                        <div class="grid-container">
-                            <button class="grid-btn" data-id="1">1</button>
-                            <button class="grid-btn" data-id="2">2</button>
-                            <button class="grid-btn" data-id="3">3</button>
-                            <button class="grid-btn" data-id="4">4</button>
-                            <button class="grid-btn" data-id="5">5</button>
-                            <button class="grid-btn" data-id="6">6</button>
-                            <button class="grid-btn" data-id="7">7</button>
-                            <button class="grid-btn" data-id="8">8</button>
-                            <button class="grid-btn" data-id="9">9</button>
-                        </div>
-                    </div>
-
-                    <div class="data-panel">
-                        <div class="session-col" id="col-a">
-                            <div class="session-header">
-                                <h3>Session A</h3>
-                                <span class="session-count" id="count-a">0 clicks</span>
-                            </div>
-                            <ul class="log-list" id="log-a"></ul>
-                            <div class="empty-state" id="empty-a">
-                                <span class="empty-icon"><i class="fa-regular fa-clipboard"></i></span>
-                                <p>No data recorded yet</p>
-                            </div>
-                        </div>
-                        <div class="session-col" id="col-b">
-                            <div class="session-header">
-                                <h3>Session B</h3>
-                                <span class="session-count" id="count-b">0 clicks</span>
-                            </div>
-                            <ul class="log-list" id="log-b"></ul>
-                            <div class="empty-state" id="empty-b">
-                                <span class="empty-icon"><i class="fa-regular fa-clipboard"></i></span>
-                                <p>No data recorded yet</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="comparison-section">
-                    <button id="btn-compare" class="btn action">Compare Sessions</button>
-                    <div id="comparison-results" class="results-box"></div>
                 </div>
             </main>
         </div>
+
+        <!-- Bottom Navigation for Mobile -->
+        <nav class="bottom-nav">
+            <a href="#" class="bottom-nav-item active">
+                <i class="fa-solid fa-house"></i>
+                <span>Home</span>
+            </a>
+            <a href="#" class="bottom-nav-item">
+                <i class="fa-solid fa-clipboard-list"></i>
+                <span>My Services</span>
+            </a>
+            <a href="#" class="bottom-nav-item">
+                <i class="fa-solid fa-users"></i>
+                <span>Family</span>
+            </a>
+            <a href="#" class="bottom-nav-item">
+                <i class="fa-solid fa-user-tie"></i>
+                <span>Workers</span>
+            </a>
+            <a href="#" class="bottom-nav-item">
+                <i class="fa-solid fa-grip"></i>
+                <span>Other</span>
+            </a>
+        </nav>
     </div>
+    
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
     <script src="script.js"></script>
 </body>

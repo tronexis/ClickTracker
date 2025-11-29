@@ -1,31 +1,44 @@
-class ClickTracker {
+class BehavioralVerification {
     constructor() {
         this.state = {
-            activeSession: null, // 'A' or 'B' or null
+            currentAttempt: 0, // 0 = not started, 1-3 = attempt number
             startTime: null,
-            data: {
-                A: [],
-                B: []
-            },
-            timerInterval: null
+            timerInterval: null,
+            attempts: [
+                { pattern: [], timings: [], clicks: 0, duration: 0 },
+                { pattern: [], timings: [], clicks: 0, duration: 0 },
+                { pattern: [], timings: [], clicks: 0, duration: 0 }
+            ]
         };
 
         this.elements = {
-            btnStartA: document.getElementById('btn-start-a'),
-            btnStartB: document.getElementById('btn-start-b'),
-            btnStop: document.getElementById('btn-stop'),
-            btnReset: document.getElementById('btn-reset'),
-            btnCompare: document.getElementById('btn-compare'),
-            statusBadge: document.getElementById('status-badge'),
+            // Status Section
+            attemptTitle: document.getElementById('attempt-title'),
+            attemptSubtitle: document.getElementById('attempt-subtitle'),
+            btnStart: document.getElementById('btn-start'),
+            
+            // Interaction Zone
+            interactionZone: document.getElementById('interaction-zone'),
             timer: document.getElementById('timer'),
-            gridBtns: document.querySelectorAll('.grid-btn'),
-            logA: document.getElementById('log-a'),
-            logB: document.getElementById('log-b'),
-            emptyA: document.getElementById('empty-a'),
-            emptyB: document.getElementById('empty-b'),
-            countA: document.getElementById('count-a'),
-            countB: document.getElementById('count-b'),
-            results: document.getElementById('comparison-results'),
+            choiceBtns: document.querySelectorAll('.choice-btn'),
+            btnComplete: document.getElementById('btn-complete'),
+            
+            // Attempt Cards
+            attemptCards: {
+                1: document.getElementById('attempt-card-1'),
+                2: document.getElementById('attempt-card-2'),
+                3: document.getElementById('attempt-card-3')
+            },
+            
+            // Verification Result
+            verificationResult: document.getElementById('verification-result'),
+            resultIcon: document.getElementById('result-icon'),
+            resultTitle: document.getElementById('result-title'),
+            resultMessage: document.getElementById('result-message'),
+            resultDetails: document.getElementById('result-details'),
+            btnReset: document.getElementById('btn-reset'),
+            
+            // Mobile Menu
             mobileMenuBtn: document.getElementById('mobile-menu-btn'),
             sidebarOverlay: document.getElementById('sidebar-overlay'),
             sidebar: document.querySelector('.sidebar')
@@ -35,36 +48,29 @@ class ClickTracker {
     }
 
     init() {
-        this.elements.btnStartA.addEventListener('click', () => this.startSession('A'));
-        this.elements.btnStartB.addEventListener('click', () => this.startSession('B'));
-        this.elements.btnStop.addEventListener('click', () => this.stopSession());
+        // Start/Reset buttons
+        this.elements.btnStart.addEventListener('click', () => this.startAttempt());
+        this.elements.btnComplete.addEventListener('click', () => this.completeAttempt());
         this.elements.btnReset.addEventListener('click', () => this.resetAll());
-        this.elements.btnCompare.addEventListener('click', () => this.compareSessions());
 
+        // Choice buttons
+        this.elements.choiceBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => this.handleChoiceClick(e));
+        });
+
+        // Mobile menu
         if (this.elements.mobileMenuBtn) {
             this.elements.mobileMenuBtn.addEventListener('click', () => this.toggleSidebar());
         }
         if (this.elements.sidebarOverlay) {
             this.elements.sidebarOverlay.addEventListener('click', () => this.closeSidebar());
         }
-
-        this.elements.gridBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => this.handleGridClick(e));
-        });
     }
-
-
 
     toggleSidebar() {
         this.elements.sidebar.classList.toggle('active');
         this.elements.sidebarOverlay.classList.toggle('active');
-        
-        // Lock/unlock body scroll
-        if (this.elements.sidebar.classList.contains('active')) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
+        document.body.style.overflow = this.elements.sidebar.classList.contains('active') ? 'hidden' : '';
     }
 
     closeSidebar() {
@@ -73,52 +79,60 @@ class ClickTracker {
         document.body.style.overflow = '';
     }
 
-    startSession(sessionName) {
-        if (this.state.activeSession) {
-            this.stopSession();
+    startAttempt() {
+        this.state.currentAttempt++;
+        
+        if (this.state.currentAttempt > 3) {
+            return;
         }
 
-        this.state.activeSession = sessionName;
-        this.state.startTime = Date.now();
-        this.state.data[sessionName] = []; // Reset data for this session
-        
+        // Reset current attempt data
+        const attemptIndex = this.state.currentAttempt - 1;
+        this.state.attempts[attemptIndex] = {
+            pattern: [],
+            timings: [],
+            clicks: 0,
+            duration: 0
+        };
+
         // Update UI
-        this.updateStatus(`Recording Session ${sessionName}...`, sessionName);
-        this.clearLog(sessionName);
-        this.updateCount(sessionName, 0);
+        this.updateStatusSection();
+        this.showInteractionZone();
+        this.updateAttemptCard(this.state.currentAttempt, 'in-progress');
         
-        // Update button states
-        this.elements.btnStartA.style.display = 'none';
-        this.elements.btnStartB.style.display = 'none';
-        this.elements.btnStop.style.display = 'inline-flex';
+        // Start timer
+        this.state.startTime = Date.now();
+        this.startTimer();
         
-        // Start Timer
-        if (this.state.timerInterval) clearInterval(this.state.timerInterval);
+        // Reset choice buttons
+        this.elements.choiceBtns.forEach(btn => btn.classList.remove('clicked'));
+    }
+
+    startTimer() {
+        if (this.state.timerInterval) {
+            clearInterval(this.state.timerInterval);
+        }
+
         this.state.timerInterval = setInterval(() => {
             const elapsed = (Date.now() - this.state.startTime) / 1000;
             this.elements.timer.textContent = elapsed.toFixed(2) + 's';
         }, 50);
     }
 
-    stopSession() {
+    stopTimer() {
         if (this.state.timerInterval) {
             clearInterval(this.state.timerInterval);
             this.state.timerInterval = null;
         }
-        this.state.activeSession = null;
-        this.updateStatus('Ready');
-        
-        // Reset button states
-        this.elements.btnStartA.style.display = 'inline-flex';
-        this.elements.btnStartB.style.display = 'inline-flex';
-        this.elements.btnStop.style.display = 'none';
     }
 
-    handleGridClick(e) {
-        if (!this.state.activeSession) return;
+    handleChoiceClick(e) {
+        if (this.state.currentAttempt === 0 || this.state.currentAttempt > 3) {
+            return;
+        }
 
-        const btn = e.target;
-        const btnId = btn.dataset.id;
+        const btn = e.target.closest('.choice-btn');
+        const buttonId = btn.dataset.id;
         const timestamp = Date.now();
         const relativeTime = (timestamp - this.state.startTime) / 1000;
 
@@ -126,299 +140,300 @@ class ClickTracker {
         btn.classList.add('clicked');
         setTimeout(() => btn.classList.remove('clicked'), 300);
 
-        const record = {
-            id: btnId,
-            time: relativeTime
-        };
+        // Record click
+        const attemptIndex = this.state.currentAttempt - 1;
+        this.state.attempts[attemptIndex].pattern.push(buttonId);
+        this.state.attempts[attemptIndex].timings.push(relativeTime);
+        this.state.attempts[attemptIndex].clicks++;
 
-        this.state.data[this.state.activeSession].push(record);
-        this.addLogEntry(this.state.activeSession, record);
-        this.updateCount(this.state.activeSession, this.state.data[this.state.activeSession].length);
+        // Show complete button after first click
+        if (this.state.attempts[attemptIndex].clicks === 1) {
+            this.elements.btnComplete.style.display = 'inline-flex';
+        }
     }
 
-    addLogEntry(session, record) {
-        const li = document.createElement('li');
-        li.className = 'log-item';
-        li.innerHTML = `
-            <span>Button ${record.id}</span>
-            <span class="log-time">${record.time.toFixed(3)}s</span>
-        `;
+    completeAttempt() {
+        if (this.state.currentAttempt === 0 || this.state.currentAttempt > 3) {
+            return;
+        }
+
+        const attemptIndex = this.state.currentAttempt - 1;
         
-        const logContainer = session === 'A' ? this.elements.logA : this.elements.logB;
-        const emptyState = session === 'A' ? this.elements.emptyA : this.elements.emptyB;
+        // Make sure at least one click was made
+        if (this.state.attempts[attemptIndex].clicks === 0) {
+            alert('Please make at least one selection before completing the attempt.');
+            return;
+        }
+
+        // Calculate duration
+        this.stopTimer();
+        this.state.attempts[attemptIndex].duration = (Date.now() - this.state.startTime) / 1000;
+
+        // Update attempt card
+        this.updateAttemptCard(this.state.currentAttempt, 'completed');
+        this.populateAttemptData(this.state.currentAttempt);
+
+        // Hide interaction zone
+        this.hideInteractionZone();
+
+        // Check if all 3 attempts are complete
+        if (this.state.currentAttempt === 3) {
+            this.performVerification();
+        } else {
+            // Prepare for next attempt
+            this.updateStatusSection();
+        }
+    }
+
+    updateStatusSection() {
+        if (this.state.currentAttempt === 0) {
+            this.elements.attemptTitle.textContent = 'Ready to Start';
+            this.elements.attemptSubtitle.textContent = 'Click "Start Verification" to begin Attempt 1 of 3';
+            this.elements.btnStart.innerHTML = '<span class="btn-icon"><i class="fa-solid fa-play"></i></span><span>Start Verification</span>';
+        } else if (this.state.currentAttempt < 3) {
+            this.elements.attemptTitle.textContent = `Attempt ${this.state.currentAttempt} Complete`;
+            this.elements.attemptSubtitle.textContent = `Ready to begin Attempt ${this.state.currentAttempt + 1} of 3`;
+            this.elements.btnStart.innerHTML = `<span class="btn-icon"><i class="fa-solid fa-play"></i></span><span>Start Attempt ${this.state.currentAttempt + 1}</span>`;
+            this.elements.btnStart.style.display = 'inline-flex';
+        } else {
+            this.elements.btnStart.style.display = 'none';
+        }
+    }
+
+    showInteractionZone() {
+        this.elements.interactionZone.style.display = 'block';
+        this.elements.btnStart.style.display = 'none';
+        this.elements.btnComplete.style.display = 'none';
+        this.elements.timer.textContent = '0.00s';
+    }
+
+    hideInteractionZone() {
+        this.elements.interactionZone.style.display = 'none';
+    }
+
+    updateAttemptCard(attemptNum, status) {
+        const card = this.elements.attemptCards[attemptNum];
+        const statusBadge = card.querySelector('.attempt-status');
         
-        // Hide empty state when first item is added
-        if (logContainer.children.length === 0) {
-            emptyState.classList.add('hidden');
+        // Remove all active classes
+        Object.values(this.elements.attemptCards).forEach(c => c.classList.remove('active'));
+        
+        // Update status
+        statusBadge.className = 'attempt-status ' + status;
+        statusBadge.textContent = status.replace('-', ' ');
+        
+        // Add active class if in progress
+        if (status === 'in-progress') {
+            card.classList.add('active');
+        }
+    }
+
+    populateAttemptData(attemptNum) {
+        const attemptIndex = attemptNum - 1;
+        const attempt = this.state.attempts[attemptIndex];
+        
+        const card = this.elements.attemptCards[attemptNum];
+        const emptyState = card.querySelector('.empty-state');
+        const attemptData = card.querySelector('.attempt-data');
+        
+        // Hide empty state, show data
+        emptyState.style.display = 'none';
+        attemptData.style.display = 'flex';
+        
+        // Populate data
+        const pattern = attempt.pattern.join(' → ');
+        const avgSpeed = attempt.clicks > 0 ? (attempt.duration / attempt.clicks).toFixed(2) : '0.00';
+        
+        document.getElementById(`pattern-${attemptNum}`).textContent = pattern || '-';
+        document.getElementById(`clicks-${attemptNum}`).textContent = attempt.clicks;
+        document.getElementById(`duration-${attemptNum}`).textContent = attempt.duration.toFixed(2) + 's';
+        document.getElementById(`speed-${attemptNum}`).textContent = avgSpeed + 's';
+    }
+
+    performVerification() {
+        // Calculate similarity between attempts
+        const similarity12 = this.calculateSimilarity(this.state.attempts[0], this.state.attempts[1]);
+        const similarity13 = this.calculateSimilarity(this.state.attempts[0], this.state.attempts[2]);
+        const similarity23 = this.calculateSimilarity(this.state.attempts[1], this.state.attempts[2]);
+        
+        const avgSimilarity12 = (similarity12.pattern + similarity12.timing) / 2;
+        const avgSimilarity13 = (similarity13.pattern + similarity13.timing) / 2;
+        const avgSimilarity23 = (similarity23.pattern + similarity23.timing) / 2;
+        
+        // Overall average similarity
+        const overallSimilarity = (avgSimilarity12 + avgSimilarity13 + avgSimilarity23) / 3;
+        
+        // Check if attempt 3 is significantly different
+        const attempt3Deviation = ((avgSimilarity13 + avgSimilarity23) / 2);
+        
+        // Verification logic
+        let isVerified = false;
+        let isSuspicious = false;
+        let resultMessage = '';
+        
+        if (overallSimilarity >= 0.8) {
+            // All attempts are very similar
+            isVerified = true;
+            resultMessage = 'All three attempts show consistent behavior patterns. Your identity has been successfully verified.';
+        } else if (attempt3Deviation < 0.6) {
+            // Attempt 3 is significantly different
+            isSuspicious = true;
+            resultMessage = 'Attempt 3 shows significant deviation from the first two attempts. This may indicate suspicious behavior.';
+        } else {
+            // Moderate similarity
+            resultMessage = 'Your attempts show moderate consistency. Additional verification may be required.';
         }
         
-        logContainer.appendChild(li);
-        
-        // Auto-scroll
-        logContainer.scrollTop = logContainer.scrollHeight;
+        // Display result
+        this.showVerificationResult(isVerified, isSuspicious, {
+            overallSimilarity,
+            attempt3Deviation,
+            similarity12: avgSimilarity12,
+            similarity13: avgSimilarity13,
+            similarity23: avgSimilarity23
+        });
     }
 
-    clearLog(session) {
-        const container = session === 'A' ? this.elements.logA : this.elements.logB;
-        const emptyState = session === 'A' ? this.elements.emptyA : this.elements.emptyB;
-        container.innerHTML = '';
-        emptyState.classList.remove('hidden');
+    calculateSimilarity(attempt1, attempt2) {
+        // Pattern similarity (sequence match)
+        let patternSimilarity = 0;
+        if (attempt1.pattern.length > 0 && attempt2.pattern.length > 0) {
+            const minLength = Math.min(attempt1.pattern.length, attempt2.pattern.length);
+            let matches = 0;
+            
+            for (let i = 0; i < minLength; i++) {
+                if (attempt1.pattern[i] === attempt2.pattern[i]) {
+                    matches++;
+                }
+            }
+            
+            // Penalize length differences
+            const lengthPenalty = Math.abs(attempt1.pattern.length - attempt2.pattern.length) * 0.1;
+            patternSimilarity = (matches / Math.max(attempt1.pattern.length, attempt2.pattern.length)) - lengthPenalty;
+            patternSimilarity = Math.max(0, Math.min(1, patternSimilarity));
+        }
+        
+        // Timing similarity (response speed consistency)
+        let timingSimilarity = 0;
+        if (attempt1.clicks > 0 && attempt2.clicks > 0) {
+            const avgSpeed1 = attempt1.duration / attempt1.clicks;
+            const avgSpeed2 = attempt2.duration / attempt2.clicks;
+            const speedDiff = Math.abs(avgSpeed1 - avgSpeed2);
+            
+            // Normalize timing similarity (assuming speeds within 0.5s are very similar)
+            timingSimilarity = Math.max(0, 1 - (speedDiff / 0.5));
+        }
+        
+        return {
+            pattern: patternSimilarity,
+            timing: timingSimilarity
+        };
+    }
+
+    showVerificationResult(isVerified, isSuspicious, stats) {
+        // Update status section
+        this.elements.attemptTitle.textContent = 'Verification Complete';
+        this.elements.attemptSubtitle.textContent = 'Analysis of all three attempts has been completed';
+        
+        // Show result section
+        this.elements.verificationResult.style.display = 'block';
+        
+        // Update result icon and message
+        if (isVerified) {
+            this.elements.resultIcon.className = 'result-icon verified';
+            this.elements.resultIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            this.elements.resultTitle.textContent = 'User Verified';
+            this.elements.resultTitle.style.color = 'var(--success-green)';
+            this.elements.resultMessage.textContent = 'All three attempts show consistent behavior patterns. Your identity has been successfully verified.';
+        } else if (isSuspicious) {
+            this.elements.resultIcon.className = 'result-icon suspicious';
+            this.elements.resultIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            this.elements.resultTitle.textContent = 'Suspicious Behavior Detected';
+            this.elements.resultTitle.style.color = 'var(--alert-red)';
+            this.elements.resultMessage.textContent = 'Attempt 3 shows significant deviation from the first two attempts. This may indicate suspicious behavior.';
+        } else {
+            this.elements.resultIcon.className = 'result-icon';
+            this.elements.resultIcon.innerHTML = '<i class="fa-solid fa-clipboard-question"></i>';
+            this.elements.resultTitle.textContent = 'Additional Verification Required';
+            this.elements.resultTitle.style.color = 'var(--warning-orange)';
+            this.elements.resultMessage.textContent = 'Your attempts show moderate consistency. Additional verification may be required.';
+        }
+        
+        // Populate detailed statistics
+        let detailsHTML = '';
+        
+        detailsHTML += `
+            <div class="result-stat">
+                <span class="stat-label">Overall Similarity</span>
+                <span class="stat-value">${(stats.overallSimilarity * 100).toFixed(1)}%</span>
+            </div>
+            <div class="result-stat">
+                <span class="stat-label">Attempt 1 vs 2</span>
+                <span class="stat-value">${(stats.similarity12 * 100).toFixed(1)}%</span>
+            </div>
+            <div class="result-stat">
+                <span class="stat-label">Attempt 1 vs 3</span>
+                <span class="stat-value">${(stats.similarity13 * 100).toFixed(1)}%</span>
+            </div>
+            <div class="result-stat">
+                <span class="stat-label">Attempt 2 vs 3</span>
+                <span class="stat-value">${(stats.similarity23 * 100).toFixed(1)}%</span>
+            </div>
+            <div class="result-stat">
+                <span class="stat-label">Attempt 3 Consistency</span>
+                <span class="stat-value">${(stats.attempt3Deviation * 100).toFixed(1)}%</span>
+            </div>
+        `;
+        
+        this.elements.resultDetails.innerHTML = detailsHTML;
+        
+        // Scroll to result
+        this.elements.verificationResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     resetAll() {
-        this.stopSession();
-        this.state.data.A = [];
-        this.state.data.B = [];
-        this.clearLog('A');
-        this.clearLog('B');
-        this.updateCount('A', 0);
-        this.updateCount('B', 0);
-        this.elements.timer.textContent = '0.00s';
-        this.elements.results.innerHTML = '';
-        this.elements.results.classList.remove('visible');
-        this.updateStatus('Ready');
-    }
-
-    updateStatus(text, session = null) {
-        this.elements.statusBadge.textContent = text;
+        // Reset state
+        this.state.currentAttempt = 0;
+        this.state.startTime = null;
+        this.state.attempts = [
+            { pattern: [], timings: [], clicks: 0, duration: 0 },
+            { pattern: [], timings: [], clicks: 0, duration: 0 },
+            { pattern: [], timings: [], clicks: 0, duration: 0 }
+        ];
         
-        // Remove all recording classes
-        this.elements.statusBadge.classList.remove('recording-a', 'recording-b');
+        this.stopTimer();
         
-        // Add appropriate class if recording
-        if (session === 'A') {
-            this.elements.statusBadge.classList.add('recording-a');
-        } else if (session === 'B') {
-            this.elements.statusBadge.classList.add('recording-b');
-        }
-    }
-
-    updateCount(session, count) {
-        const countElement = session === 'A' ? this.elements.countA : this.elements.countB;
-        countElement.textContent = `${count} click${count !== 1 ? 's' : ''}`;
-    }
-
-    compareSessions() {
-        this.stopSession(); // Ensure we aren't recording
+        // Reset UI
+        this.updateStatusSection();
+        this.hideInteractionZone();
+        this.elements.verificationResult.style.display = 'none';
         
-        // Show the results box
-        this.elements.results.classList.add('visible');
-        
-        const dataA = this.state.data.A;
-        const dataB = this.state.data.B;
-
-        if (dataA.length === 0 && dataB.length === 0) {
-            this.elements.results.innerHTML = `
-                <div class="empty-comparison">
-                    <span class="empty-icon"><i class="fa-solid fa-chart-simple"></i></span>
-                    <p>No data to compare. Record both sessions first.</p>
-                </div>
-            `;
-            return;
-        }
-
-        if (dataA.length === 0 || dataB.length === 0) {
-            const missing = dataA.length === 0 ? 'A' : 'B';
-            this.elements.results.innerHTML = `
-                <div class="empty-comparison">
-                    <span class="empty-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
-                    <p>Session ${missing} has no data. Record both sessions to compare.</p>
-                </div>
-            `;
-            return;
-        }
-
-        // Calculate statistics
-        const stats = this.calculateStatistics(dataA, dataB);
-        
-        let html = '<div class="comparison-container">';
-        
-        // Statistics Cards
-        html += '<div class="stats-grid">';
-        
-        // Accuracy Card
-        const accuracyPercent = ((stats.matches / stats.minLength) * 100).toFixed(1);
-        html += `
-            <div class="stat-card ${stats.matches === stats.minLength ? 'success' : 'warning'}">
-                <div class="stat-icon">${stats.matches === stats.minLength ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-triangle-exclamation"></i>'}</div>
-                <div class="stat-content">
-                    <div class="stat-label">Sequence Accuracy</div>
-                    <div class="stat-value">${accuracyPercent}%</div>
-                    <div class="stat-detail">${stats.matches}/${stats.minLength} matches</div>
-                </div>
-            </div>
-        `;
-        
-        // Timing Card
-        const avgTimeDiff = stats.totalTimeDiff / stats.minLength;
-        html += `
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-stopwatch"></i></div>
-                <div class="stat-content">
-                    <div class="stat-label">Avg Time Difference</div>
-                    <div class="stat-value">${avgTimeDiff.toFixed(3)}s</div>
-                    <div class="stat-detail">Total: ${stats.totalTimeDiff.toFixed(3)}s</div>
-                </div>
-            </div>
-        `;
-        
-        // Duration Card
-        html += `
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-ruler"></i></div>
-                <div class="stat-content">
-                    <div class="stat-label">Session Lengths</div>
-                    <div class="stat-value">${dataA.length} vs ${dataB.length}</div>
-                    <div class="stat-detail">${stats.lengthMatch ? 'Equal length' : `Diff: ${Math.abs(dataA.length - dataB.length)}`}</div>
-                </div>
-            </div>
-        `;
-        
-        // Speed Card
-        const speedA = dataA.length > 0 ? dataA[dataA.length - 1].time : 0;
-        const speedB = dataB.length > 0 ? dataB[dataB.length - 1].time : 0;
-        const faster = speedA < speedB ? 'A' : 'B';
-        const speedDiff = Math.abs(speedA - speedB).toFixed(3);
-        html += `
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-rocket"></i></div>
-                <div class="stat-content">
-                    <div class="stat-label">Completion Time</div>
-                    <div class="stat-value">${speedA.toFixed(2)}s vs ${speedB.toFixed(2)}s</div>
-                    <div class="stat-detail">Session ${faster} faster by ${speedDiff}s</div>
-                </div>
-            </div>
-        `;
-        
-        html += '</div>'; // End stats-grid
-        
-        // Detailed Comparison
-        html += '<div class="comparison-details">';
-        html += '<h4>Step-by-Step Comparison</h4>';
-        html += '<div class="comparison-list">';
-        
-        const maxLen = Math.max(dataA.length, dataB.length);
-        
-        for (let i = 0; i < maxLen; i++) {
-            const itemA = dataA[i];
-            const itemB = dataB[i];
+        // Reset attempt cards
+        for (let i = 1; i <= 3; i++) {
+            const card = this.elements.attemptCards[i];
+            card.classList.remove('active');
             
-            if (!itemA || !itemB) {
-                // One session has more clicks
-                const extra = itemA || itemB;
-                const session = itemA ? 'A' : 'B';
-                html += `
-                    <div class="comparison-row extra">
-                        <div class="step-number">${i + 1}</div>
-                        <div class="comparison-content">
-                            <div class="comparison-buttons">
-                                <span class="btn-display ${itemA ? '' : 'missing'}">
-                                    ${itemA ? `Button ${itemA.id}` : '—'}
-                                </span>
-                                <span class="vs">vs</span>
-                                <span class="btn-display ${itemB ? '' : 'missing'}">
-                                    ${itemB ? `Button ${itemB.id}` : '—'}
-                                </span>
-                            </div>
-                            <div class="timing-info">
-                                <span class="extra-label">Extra click in Session ${session}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                const match = itemA.id === itemB.id;
-                const timeDiff = Math.abs(itemA.time - itemB.time);
-                
-                html += `
-                    <div class="comparison-row ${match ? 'match' : 'mismatch'}">
-                        <div class="step-number">${i + 1}</div>
-                        <div class="comparison-content">
-                            <div class="comparison-buttons">
-                                <span class="btn-display">${itemA.id}</span>
-                                <span class="vs">vs</span>
-                                <span class="btn-display">${itemB.id}</span>
-                            </div>
-                            <div class="timing-info">
-                                <div class="time-values">
-                                    <span>${itemA.time.toFixed(3)}s</span>
-                                    <span class="time-diff">Δ ${timeDiff.toFixed(3)}s</span>
-                                    <span>${itemB.time.toFixed(3)}s</span>
-                                </div>
-                                ${match ? 
-                                    '<span class="match-badge"><i class="fa-solid fa-check"></i> Match</span>' : 
-                                    '<span class="mismatch-badge"><i class="fa-solid fa-xmark"></i> Mismatch</span>'
-                                }
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-        
-        html += '</div>'; // End comparison-list
-        html += '</div>'; // End comparison-details
-        
-        // Summary
-        html += '<div class="comparison-summary">';
-        if (stats.lengthMatch && stats.matches === stats.minLength) {
-            html += `
-                <div class="summary-message success">
-                    <span class="summary-icon"><i class="fa-solid fa-check-double"></i></span>
-                    <div>
-                        <strong>Perfect Match!</strong>
-                        <p>Both sessions have identical sequences with an average timing difference of ${avgTimeDiff.toFixed(3)}s per click.</p>
-                    </div>
-                </div>
-            `;
-        } else {
-            const issues = [];
-            if (!stats.lengthMatch) issues.push(`${Math.abs(dataA.length - dataB.length)} length difference`);
-            if (stats.mismatches > 0) issues.push(`${stats.mismatches} sequence mismatch${stats.mismatches > 1 ? 'es' : ''}`);
+            const statusBadge = card.querySelector('.attempt-status');
+            statusBadge.className = 'attempt-status pending';
+            statusBadge.textContent = 'Pending';
             
-            html += `
-                <div class="summary-message warning">
-                    <span class="summary-icon"><i class="fa-solid fa-clipboard-list"></i></span>
-                    <div>
-                        <strong>Differences Found</strong>
-                        <p>${issues.join(', ')}</p>
-                    </div>
-                </div>
-            `;
+            const emptyState = card.querySelector('.empty-state');
+            const attemptData = card.querySelector('.attempt-data');
+            emptyState.style.display = 'block';
+            attemptData.style.display = 'none';
         }
-        html += '</div>'; // End comparison-summary
         
-        html += '</div>'; // End comparison-container
-
-        this.elements.results.innerHTML = html;
-    }
-
-    calculateStatistics(dataA, dataB) {
-        const minLength = Math.min(dataA.length, dataB.length);
-        let matches = 0;
-        let mismatches = 0;
-        let totalTimeDiff = 0;
-
-        for (let i = 0; i < minLength; i++) {
-            if (dataA[i].id === dataB[i].id) {
-                matches++;
-            } else {
-                mismatches++;
-            }
-            totalTimeDiff += Math.abs(dataA[i].time - dataB[i].time);
-        }
-
-        return {
-            matches,
-            mismatches,
-            minLength,
-            lengthMatch: dataA.length === dataB.length,
-            totalTimeDiff
-        };
+        // Reset buttons
+        this.elements.choiceBtns.forEach(btn => btn.classList.remove('clicked'));
+        this.elements.btnStart.style.display = 'inline-flex';
+        this.elements.btnComplete.style.display = 'none';
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    new ClickTracker();
+    new BehavioralVerification();
 });
