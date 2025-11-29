@@ -17,6 +17,10 @@
     padding: 0;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg-color);
@@ -25,6 +29,7 @@ body {
     height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
 }
 
 .dashboard-layout {
@@ -159,6 +164,12 @@ body {
     position: sticky;
     top: 0;
     z-index: 10;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
 .header-title h1 {
@@ -827,4 +838,367 @@ body {
 .summary-message p {
     color: var(--text-secondary);
     margin: 0;
+}
+
+/* Mobile Responsive Styles */
+
+/* Mobile Menu Button */
+.mobile-menu-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    margin-right: 0.5rem;
+}
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 900;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Media Queries */
+@media (max-width: 1024px) {
+    .dashboard-layout {
+        grid-template-columns: 220px 1fr;
+    }
+    
+    .workspace {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .grid-container {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-layout {
+        display: block;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        height: 100%;
+        width: 280px;
+        z-index: 1000;
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .sidebar.active {
+        left: 0;
+    }
+
+    .mobile-menu-btn {
+        display: flex;
+    }
+
+    .top-header {
+        padding: 0 1rem;
+        height: 60px;
+    }
+    
+    .header-title h1 {
+        font-size: 1.1rem;
+    }
+
+    .dashboard-content {
+        padding: 1rem;
+    }
+
+    .controls {
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: stretch;
+        padding: 1.25rem;
+    }
+
+    .session-controls {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.75rem;
+    }
+
+    .session-controls .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .status-display {
+        justify-content: space-between;
+        width: 100%;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .data-panel {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .interaction-zone {
+        padding: 1.5rem;
+    }
+
+    .comparison-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-display {
+        width: 100%;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .comparison-row {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .timing-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .brand h2 {
+        font-size: 1.1rem;
+    }
+
+    .nav-item {
+        padding: 0.65rem 0.85rem;
+        font-size: 0.9rem;
+    }
+
+    .nav-icon {
+        font-size: 1rem;
+    }
+
+    .user-profile-mini {
+        padding: 0.75rem;
+    }
+
+    .avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.85rem;
+    }
+
+    .user-info .name {
+        font-size: 0.85rem;
+    }
+
+    .user-info .role {
+        font-size: 0.7rem;
+    }
+
+    .header-title h1 {
+        font-size: 1rem;
+    }
+
+    .icon-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 0.9rem;
+    }
+
+    .controls {
+        padding: 1rem;
+    }
+
+    .btn {
+        padding: 0.65rem 1.25rem;
+        font-size: 0.9rem;
+    }
+
+    .status-badge {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.85rem;
+    }
+
+    #timer {
+        font-size: 1rem;
+    }
+
+    .grid-container {
+        gap: 0.75rem;
+        padding: 0 0.5rem;
+    }
+
+    .grid-btn {
+        font-size: 1.3rem;
+        min-height: 60px;
+    }
+
+    .session-col {
+        padding: 1.25rem;
+    }
+
+    .session-header h3 {
+        font-size: 0.85rem;
+    }
+
+    .session-count {
+        font-size: 0.8rem;
+        padding: 0.2rem 0.65rem;
+    }
+
+    .log-item {
+        padding: 0.5rem 0.65rem;
+        font-size: 0.85rem;
+    }
+
+    .empty-state {
+        padding: 2rem 1rem;
+    }
+
+    .empty-icon {
+        font-size: 2.5rem;
+    }
+
+    .empty-state p {
+        font-size: 0.85rem;
+    }
+
+    .comparison-section {
+        margin-top: 1.5rem;
+    }
+
+    .results-box {
+        padding: 1.25rem;
+    }
+
+    .stat-card {
+        padding: 1rem;
+    }
+
+    .stat-icon {
+        font-size: 1.75rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+    }
+
+    .stat-detail {
+        font-size: 0.8rem;
+    }
+
+    .comparison-details {
+        padding: 1.25rem;
+    }
+
+    .comparison-details h4 {
+        font-size: 1rem;
+    }
+
+    .comparison-row {
+        padding: 0.85rem;
+    }
+
+    .step-number {
+        min-width: 2rem;
+        height: 2rem;
+        font-size: 0.85rem;
+    }
+
+    .btn-display {
+        padding: 0.4rem 0.85rem;
+        font-size: 0.85rem;
+        min-width: 70px;
+    }
+
+    .time-values {
+        font-size: 0.8rem;
+        gap: 0.5rem;
+    }
+
+    .match-badge,
+    .mismatch-badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.65rem;
+    }
+
+    .summary-message {
+        padding: 1.25rem;
+        gap: 0.85rem;
+    }
+
+    .summary-icon {
+        font-size: 1.75rem;
+    }
+
+    .summary-message strong {
+        font-size: 1rem;
+    }
+
+    .summary-message p {
+        font-size: 0.85rem;
+    }
+
+    .vs {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 380px) {
+    .sidebar {
+        width: 260px;
+    }
+
+    .dashboard-content {
+        padding: 0.75rem;
+    }
+
+    .grid-container {
+        gap: 0.5rem;
+    }
+
+    .grid-btn {
+        font-size: 1.2rem;
+        min-height: 55px;
+    }
+
+    .btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .header-actions {
+        gap: 0.5rem;
+    }
+
+    .stats-grid {
+        gap: 0.75rem;
+    }
 }

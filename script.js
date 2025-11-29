@@ -25,7 +25,10 @@ class ClickTracker {
             emptyB: document.getElementById('empty-b'),
             countA: document.getElementById('count-a'),
             countB: document.getElementById('count-b'),
-            results: document.getElementById('comparison-results')
+            results: document.getElementById('comparison-results'),
+            mobileMenuBtn: document.getElementById('mobile-menu-btn'),
+            sidebarOverlay: document.getElementById('sidebar-overlay'),
+            sidebar: document.querySelector('.sidebar')
         };
 
         this.init();
@@ -38,9 +41,36 @@ class ClickTracker {
         this.elements.btnReset.addEventListener('click', () => this.resetAll());
         this.elements.btnCompare.addEventListener('click', () => this.compareSessions());
 
+        if (this.elements.mobileMenuBtn) {
+            this.elements.mobileMenuBtn.addEventListener('click', () => this.toggleSidebar());
+        }
+        if (this.elements.sidebarOverlay) {
+            this.elements.sidebarOverlay.addEventListener('click', () => this.closeSidebar());
+        }
+
         this.elements.gridBtns.forEach(btn => {
             btn.addEventListener('click', (e) => this.handleGridClick(e));
         });
+    }
+
+
+
+    toggleSidebar() {
+        this.elements.sidebar.classList.toggle('active');
+        this.elements.sidebarOverlay.classList.toggle('active');
+        
+        // Lock/unlock body scroll
+        if (this.elements.sidebar.classList.contains('active')) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+    }
+
+    closeSidebar() {
+        this.elements.sidebar.classList.remove('active');
+        this.elements.sidebarOverlay.classList.remove('active');
+        document.body.style.overflow = '';
     }
 
     startSession(sessionName) {
