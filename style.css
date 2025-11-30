@@ -557,6 +557,32 @@ body {
     font-size: 14px;
 }
 
+/* Time Elapsed Styling */
+.data-row .value.time-normal {
+    color: var(--success-green);
+    font-weight: 700;
+}
+
+.data-row .value.time-moderate {
+    color: var(--warning-orange);
+    font-weight: 700;
+}
+
+.data-row .value.time-suspicious {
+    color: var(--alert-red);
+    font-weight: 700;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
 /* ================================
    VERIFICATION RESULT
    ================================ */

@@ -5,9 +5,9 @@ class BehavioralVerification {
             startTime: null,
             timerInterval: null,
             attempts: [
-                { pattern: [], timings: [], clicks: 0, duration: 0, coordinates: [] },
-                { pattern: [], timings: [], clicks: 0, duration: 0, coordinates: [] },
-                { pattern: [], timings: [], clicks: 0, duration: 0, coordinates: [] }
+                { pattern: [], timings: [], clicks: 0, duration: 0, coordinates: [], completedAt: null },
+                { pattern: [], timings: [], clicks: 0, duration: 0, coordinates: [], completedAt: null },
+                { pattern: [], timings: [], clicks: 0, duration: 0, coordinates: [], completedAt: null }
             ],
             isAuthenticated: false,
             isGuest: false,
@@ -207,6 +207,41 @@ class BehavioralVerification {
 
     generateSessionToken() {
         return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    // --- Time Calculation Helpers ---
+
+    calculateTimeElapsed(fromTimestamp, toTimestamp) {
+        if (!fromTimestamp || !toTimestamp) return null;
+        return (toTimestamp - fromTimestamp) / 1000; // Return in seconds
+    }
+
+    formatTimeElapsed(seconds) {
+        if (seconds === null || seconds === undefined) return '-';
+        
+        if (seconds < 60) {
+            return `${seconds.toFixed(1)}s`;
+        } else if (seconds < 3600) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            return `${minutes}m ${remainingSeconds}s`;
+        } else {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            return `${hours}h ${minutes}m`;
+        }
+    }
+
+    getTimeElapsedClass(seconds) {
+        if (seconds === null || seconds === undefined) return '';
+        
+        if (seconds < 30) {
+            return 'time-normal'; // Green - normal timing
+        } else if (seconds < 120) {
+            return 'time-moderate'; // Yellow - moderate delay
+        } else {
+            return 'time-suspicious'; // Red - suspicious delay
+        }
     }
 
     checkAuthStatus() {
@@ -727,9 +762,11 @@ class BehavioralVerification {
             return;
         }
 
-        // Calculate duration
+        // Calculate duration and record completion timestamp
         this.stopTimer();
-        this.state.attempts[attemptIndex].duration = (Date.now() - this.state.startTime) / 1000;
+        const completionTime = Date.now();
+        this.state.attempts[attemptIndex].duration = (completionTime - this.state.startTime) / 1000;
+        this.state.attempts[attemptIndex].completedAt = completionTime;
 
         // Update attempt card
         this.updateAttemptCard(this.state.currentAttempt, 'completed');
@@ -812,11 +849,31 @@ class BehavioralVerification {
             ? attempt.coordinates.map(coord => `(${coord.x}, ${coord.y})`).join(', ')
             : '-';
         
+        // Calculate time elapsed since previous attempt
+        let timeElapsedText = '-';
+        let timeElapsedClass = '';
+        if (attemptNum > 1) {
+            const prevAttemptIndex = attemptNum - 2;
+            const prevAttempt = this.state.attempts[prevAttemptIndex];
+            if (prevAttempt.completedAt && attempt.completedAt) {
+                const elapsedSeconds = this.calculateTimeElapsed(prevAttempt.completedAt, attempt.completedAt);
+                timeElapsedText = this.formatTimeElapsed(elapsedSeconds);
+                timeElapsedClass = this.getTimeElapsedClass(elapsedSeconds);
+            }
+        }
+        
         document.getElementById(`pattern-${attemptNum}`).textContent = pattern || '-';
         document.getElementById(`clicks-${attemptNum}`).textContent = attempt.clicks;
         document.getElementById(`duration-${attemptNum}`).textContent = attempt.duration.toFixed(2) + 's';
         document.getElementById(`speed-${attemptNum}`).textContent = avgSpeed + 's';
         document.getElementById(`coordinates-${attemptNum}`).textContent = coordinatesText;
+        
+        // Update time elapsed if element exists
+        const timeElapsedEl = document.getElementById(`time-elapsed-${attemptNum}`);
+        if (timeElapsedEl) {
+            timeElapsedEl.textContent = timeElapsedText;
+            timeElapsedEl.className = `value ${timeElapsedClass}`;
+        }
     }
 
     performVerification() {
@@ -973,9 +1030,9 @@ class BehavioralVerification {
         this.state.currentAttempt = 0;
         this.state.startTime = null;
         this.state.attempts = [
-            { pattern: [], timings: [], clicks: 0, duration: 0 },
-            { pattern: [], timings: [], clicks: 0, duration: 0 },
-            { pattern: [], timings: [], clicks: 0, duration: 0 }
+            { pattern: [], timings: [], clicks: 0, duration: 0, coordinates: [], completedAt: null },
+            { pattern: [], timings: [], clicks: 0, duration: 0, coordinates: [], completedAt: null },
+            { pattern: [], timings: [], clicks: 0, duration: 0, coordinates: [], completedAt: null }
         ];
         
         this.stopTimer();
