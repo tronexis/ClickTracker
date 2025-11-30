@@ -897,19 +897,19 @@ class BehavioralVerification {
         if (isVerified) {
             this.elements.resultIcon.className = 'result-icon verified';
             this.elements.resultIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
-            this.elements.resultTitle.textContent = 'User Verified';
+            this.elements.resultTitle.textContent = 'Behavioral AI Analysis Result: Verified';
             this.elements.resultTitle.style.color = 'var(--success-green)';
             this.elements.resultMessage.textContent = 'All three attempts show consistent behavior patterns. Your identity has been successfully verified.';
         } else if (isSuspicious) {
             this.elements.resultIcon.className = 'result-icon suspicious';
             this.elements.resultIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
-            this.elements.resultTitle.textContent = 'Suspicious Behavior Detected';
+            this.elements.resultTitle.textContent = 'Behavioral AI Analysis Result: Suspicious';
             this.elements.resultTitle.style.color = 'var(--alert-red)';
             this.elements.resultMessage.textContent = 'Attempt 3 shows significant deviation from the first two attempts. This may indicate suspicious behavior.';
         } else {
             this.elements.resultIcon.className = 'result-icon';
             this.elements.resultIcon.innerHTML = '<i class="fa-solid fa-clipboard-question"></i>';
-            this.elements.resultTitle.textContent = 'Additional Verification Required';
+            this.elements.resultTitle.textContent = 'Behavioral AI Analysis Result: Inconclusive';
             this.elements.resultTitle.style.color = 'var(--warning-orange)';
             this.elements.resultMessage.textContent = 'Your attempts show moderate consistency. Additional verification may be required.';
         }
