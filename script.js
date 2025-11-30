@@ -98,7 +98,20 @@ class BehavioralVerification {
             statusSection: document.querySelector('.status-section'),
             attemptsSummary: document.getElementById('attempts-summary'),
             historyList: document.getElementById('history-list'),
-            btnClearHistory: document.getElementById('btn-clear-history')
+            btnClearHistory: document.getElementById('btn-clear-history'),
+
+            // Timing Visualization
+            timingVisualization: document.getElementById('timing-visualization'),
+            timingBars: {
+                1: document.getElementById('timing-bar-1'),
+                2: document.getElementById('timing-bar-2'),
+                3: document.getElementById('timing-bar-3')
+            },
+            timingValues: {
+                1: document.getElementById('timing-value-1'),
+                2: document.getElementById('timing-value-2'),
+                3: document.getElementById('timing-value-3')
+            }
         };
 
         this.init();
@@ -510,6 +523,7 @@ class BehavioralVerification {
         this.elements.interactionZone.style.display = 'none';
         this.elements.attemptsSummary.style.display = 'none';
         this.elements.verificationResult.style.display = 'none';
+        this.elements.timingVisualization.style.display = 'none';
         
         // Show History View
         this.elements.historySection.style.display = 'block';
@@ -530,6 +544,12 @@ class BehavioralVerification {
         // Show Verification Views
         this.elements.statusSection.style.display = 'flex'; // status-section is flex
         this.elements.attemptsSummary.style.display = 'block';
+        
+        // Restore timing visualization if attempts exist
+        const hasCompletedAttempts = this.state.attempts.some(a => a.duration > 0);
+        if (hasCompletedAttempts) {
+            this.elements.timingVisualization.style.display = 'block';
+        }
         
         // Restore state of interaction zone / result based on current flow
         if (this.state.currentAttempt > 0 && this.state.currentAttempt <= 3 && this.elements.verificationResult.style.display !== 'block') {
@@ -874,6 +894,57 @@ class BehavioralVerification {
             timeElapsedEl.textContent = timeElapsedText;
             timeElapsedEl.className = `value ${timeElapsedClass}`;
         }
+
+        // Update timing visualization
+        this.updateTimingVisualization();
+    }
+
+    updateTimingVisualization() {
+        // Show timing visualization if at least one attempt is complete
+        const hasCompletedAttempts = this.state.attempts.some(a => a.duration > 0);
+        
+        if (hasCompletedAttempts) {
+            this.elements.timingVisualization.style.display = 'block';
+            
+            // Find the maximum duration to scale bars relatively
+            const maxDuration = Math.max(...this.state.attempts.map(a => a.duration));
+            
+            // Update each bar
+            for (let i = 0; i < 3; i++) {
+                const attemptNum = i + 1;
+                const attempt = this.state.attempts[i];
+                
+                if (attempt.duration > 0) {
+                    // Calculate percentage width (minimum 5% for visibility)
+                    const widthPercent = maxDuration > 0 
+                        ? Math.max(5, (attempt.duration / maxDuration) * 100)
+                        : 0;
+                    
+                    // Update bar width with animation
+                    const bar = this.elements.timingBars[attemptNum];
+                    const value = this.elements.timingValues[attemptNum];
+                    
+                    if (bar && value) {
+                        setTimeout(() => {
+                            bar.style.width = `${widthPercent}%`;
+                        }, i * 150); // Stagger animation for each bar
+                        
+                        value.textContent = `${attempt.duration.toFixed(2)}s`;
+                    }
+                } else {
+                    // Reset bar if no duration yet
+                    const bar = this.elements.timingBars[attemptNum];
+                    const value = this.elements.timingValues[attemptNum];
+                    
+                    if (bar && value) {
+                        bar.style.width = '0%';
+                        value.textContent = '0.00s';
+                    }
+                }
+            }
+        } else {
+            this.elements.timingVisualization.style.display = 'none';
+        }
     }
 
     performVerification() {
@@ -1041,6 +1112,7 @@ class BehavioralVerification {
         this.updateStatusSection();
         this.hideInteractionZone();
         this.elements.verificationResult.style.display = 'none';
+        this.elements.timingVisualization.style.display = 'none';
         
         // Reset attempt cards
         for (let i = 1; i <= 3; i++) {
