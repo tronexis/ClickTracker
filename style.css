@@ -63,7 +63,7 @@ body {
 }
 
 .brand {
-    padding: 24px 20px;
+    padding: 14px 20px;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -82,10 +82,9 @@ body {
     font-size: 20px;
 }
 
-.brand h2 {
-    font-size: 20px;
+.brand h1 {
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--primary-green);
 }
 
 .nav-menu {
