@@ -83,6 +83,10 @@ class BehavioralVerification {
             btnConfirmLogout: document.getElementById('btn-confirm-logout'),
             closeLogoutModalBtns: document.querySelectorAll('.close-logout-modal'),
 
+            // Suspicious Behavior Alert Modal
+            suspiciousAlertModal: document.getElementById('suspicious-alert-modal'),
+            btnCloseSuspiciousAlert: document.getElementById('btn-close-suspicious-alert'),
+
             // History
             navHistory: document.getElementById('nav-history'),
             mobileNavHistory: document.getElementById('mobile-nav-history'),
@@ -191,6 +195,11 @@ class BehavioralVerification {
         // Clear History
         if (this.elements.btnClearHistory) {
             this.elements.btnClearHistory.addEventListener('click', () => this.clearHistory());
+        }
+
+        // Suspicious Behavior Alert Modal
+        if (this.elements.btnCloseSuspiciousAlert) {
+            this.elements.btnCloseSuspiciousAlert.addEventListener('click', () => this.closeSuspiciousAlert());
         }
     }
 
@@ -593,6 +602,16 @@ class BehavioralVerification {
         }
     }
 
+    // --- Suspicious Behavior Alert Modal Methods ---
+
+    showSuspiciousAlert() {
+        this.elements.suspiciousAlertModal.style.display = 'flex';
+    }
+
+    closeSuspiciousAlert() {
+        this.elements.suspiciousAlertModal.style.display = 'none';
+    }
+
     // --- Existing Methods (Modified) ---
 
     toggleSidebar() {
@@ -906,6 +925,9 @@ class BehavioralVerification {
             this.elements.resultTitle.textContent = 'Behavioral AI Analysis Result: Suspicious';
             this.elements.resultTitle.style.color = 'var(--alert-red)';
             this.elements.resultMessage.textContent = 'Attempt 3 shows significant deviation from the first two attempts. This may indicate suspicious behavior.';
+            
+            // Show suspicious behavior alert popup
+            setTimeout(() => this.showSuspiciousAlert(), 500);
         } else {
             this.elements.resultIcon.className = 'result-icon';
             this.elements.resultIcon.innerHTML = '<i class="fa-solid fa-clipboard-question"></i>';
