@@ -5,9 +5,9 @@ class BehavioralVerification {
             startTime: null,
             timerInterval: null,
             attempts: [
-                { pattern: [], timings: [], clicks: 0, duration: 0 },
-                { pattern: [], timings: [], clicks: 0, duration: 0 },
-                { pattern: [], timings: [], clicks: 0, duration: 0 }
+                { pattern: [], timings: [], clicks: 0, duration: 0, coordinates: [] },
+                { pattern: [], timings: [], clicks: 0, duration: 0, coordinates: [] },
+                { pattern: [], timings: [], clicks: 0, duration: 0, coordinates: [] }
             ],
             isAuthenticated: false,
             isGuest: false,
@@ -626,7 +626,8 @@ class BehavioralVerification {
             pattern: [],
             timings: [],
             clicks: 0,
-            duration: 0
+            duration: 0,
+            coordinates: []
         };
 
         // Update UI
@@ -670,15 +671,23 @@ class BehavioralVerification {
         const timestamp = Date.now();
         const relativeTime = (timestamp - this.state.startTime) / 1000;
 
+        // Capture X, Y coordinates
+        const x = e.clientX;
+        const y = e.clientY;
+
         // Visual feedback
         btn.classList.add('clicked');
         setTimeout(() => btn.classList.remove('clicked'), 300);
 
-        // Record click
+        // Record click with coordinates
         const attemptIndex = this.state.currentAttempt - 1;
         this.state.attempts[attemptIndex].pattern.push(buttonId);
         this.state.attempts[attemptIndex].timings.push(relativeTime);
+        this.state.attempts[attemptIndex].coordinates.push({ x, y, buttonId });
         this.state.attempts[attemptIndex].clicks++;
+
+        // Log coordinates for analysis (can be removed in production)
+        console.log(`Button ${buttonId} clicked at (${x}, ${y})`);
 
         // Show complete button after first click
         if (this.state.attempts[attemptIndex].clicks === 1) {
@@ -779,10 +788,16 @@ class BehavioralVerification {
         const pattern = attempt.pattern.join(' → ');
         const avgSpeed = attempt.clicks > 0 ? (attempt.duration / attempt.clicks).toFixed(2) : '0.00';
         
+        // Format coordinates data
+        const coordinatesText = attempt.coordinates.length > 0 
+            ? attempt.coordinates.map(coord => `(${coord.x}, ${coord.y})`).join(', ')
+            : '-';
+        
         document.getElementById(`pattern-${attemptNum}`).textContent = pattern || '-';
         document.getElementById(`clicks-${attemptNum}`).textContent = attempt.clicks;
         document.getElementById(`duration-${attemptNum}`).textContent = attempt.duration.toFixed(2) + 's';
         document.getElementById(`speed-${attemptNum}`).textContent = avgSpeed + 's';
+        document.getElementById(`coordinates-${attemptNum}`).textContent = coordinatesText;
     }
 
     performVerification() {
